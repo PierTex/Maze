@@ -2,75 +2,105 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <time.h>
 
-typedef struct Node{
-
+typedef struct Node
+{
     int x;
     int y;
     struct Node *next;
 } list_t;
 
-typedef struct Exit{
+typedef struct
+{
     int x;
     int y;
-} coordinate;
+} coordinates;
 
-
-int playerX, playerY;
-coordinate exit;
+coordinates player;
+coordinates entrance, exit_maze;
 char direction;
 int points;
 int steps;
 
-void resetColor() {
+void refresh()
+{
+#ifdef _WIN32
+    system("cls");
+#endif
+
+#ifdef __APPLE__
+    system("clear");
+#endif
+
+#ifdef __linux__
+    system("clear");
+#endif
+}
+
+void resetColor()
+{
     printf("\033[0m");
 }
 
-void black() {
+void black()
+{
     printf("\033[0:30m");
 }
 
-void red() {
+void red()
+{
     printf("\033[0:31m");
 }
 
-void green() {
+void green()
+{
     printf("\033[0:32m");
 }
 
-void yellow() {
+void yellow()
+{
     printf("\033[0:33m");
 }
 
-void blue() {
+void blue()
+{
     printf("\033[0:34m");
 }
 
-void purple() {
+void purple()
+{
     printf("\033[0:35m");
 }
 
-void cyan() {
+void cyan()
+{
     printf("\033[0:36m");
 }
 
-void white() {
+void white()
+{
     printf("\033[0:37m");
 }
 
-char **createMaze(int x, int y) {
+char **createMaze(int x, int y)
+{
+    srand(time(NULL));
 
-    char **maze = malloc(x*sizeof(char*));
-    
-    for(int i = 0; i < y; i++) {
-        maze[i] = malloc(y*sizeof(char*));
-    }
+    char **maze = malloc(x * sizeof(char *));
+
+    for (int i = 0; i < y; i++)
+        maze[i] = malloc(y * sizeof(char *));
 
     int nWalls, pHole, ctr, ctrCol;
     int lenCorridor = ((rand() % 3) + 2); // larghezza corridoio (2 o 3 spazi)
+
     // creazione entrata e uscita
-    int entrance = rand() % (x - 2) + 1;
-    int x_exit = rand() % (x - 2) + 1;
+    entrance.x = rand() % (x - 2) + 1;
+    entrance.y = 0;
+    exit_maze.x = rand() % (x - 2) + 1;
+    exit_maze.y = y - 1;
+
     // stampa bordo
     bool frame;         // controllo bordo labirinto
     bool entrance_exit; // controllo entrata o uscita
@@ -79,27 +109,22 @@ char **createMaze(int x, int y) {
         for (int col = 0; col < y; ++col)
         {
             frame = (row == 0 || row == x - 1 || col == 0 || col == y - 1);
-            entrance_exit = ((col == 0 && row == entrance) || (col == y - 1 && row == x_exit));
+            entrance_exit = ((col == entrance.y && row == entrance.x) || (col == exit_maze.y && row == exit_maze.x));
             if (frame && !entrance_exit)
                 maze[row][col] = '#';
-            else{
+            else
+            {
                 maze[row][col] = ' ';
-                if(col == 0 && row == entrance){
-                    playerX = entrance;
-                    playerY = col;
-                    maze[playerX][playerY] = 'o';
+                if (col == entrance.y && row == entrance.x)
+                {
+                    player.x = entrance.x;
+                    player.y = entrance.y;
+                    maze[player.x][player.y] = 'o';
                 }
-                if(col == y-1 && row == x_exit) {
+                if (col == exit_maze.y && row == exit_maze.x)
                     maze[row][col] = '_';
-                    exit.x = row;
-                    exit.y = col;
-
-                }
-                
-            }  
-
+            }
         }
-        
     }
 
     // stampa delle mura piene
@@ -110,24 +135,20 @@ char **createMaze(int x, int y) {
         {
             lenCorridor = rand() % (3) + 2;
             for (int row = 1; row < x - 1; ++row)
-            {
                 maze[row][col] = '#';
-            }
         }
         if (col >= y - 7 && col <= y - 4)
         {
             lenCorridor = 2;
             for (int row = 1; row < x - 1; ++row)
-            {
                 maze[row][col] = '#';
-            }
         }
     }
 
     // creazione buchi per colonna
     int k;
     bool check;    // posso creare un buco?
-    bool atLeast1; // sono presenti buchi?
+    bool atLeast1; // e' presente almeno un buco?
     for (int col = 3; col < y - 2; col++)
     {
         if (maze[1][col] == '#')
@@ -152,7 +173,7 @@ char **createMaze(int x, int y) {
                 ctrCol++;
             } while (!atLeast1);
             if (ctrCol > 2 && !atLeast1)
-            { // se non genera un buco in 3 cicli allora lo genera obbligatoriamente random
+            { // se non genera un buco in 3 cicli allora lo genera obbligatoriamente in una posizione random
                 k = rand() % (x - 3) + 1;
                 maze[k][col] = ' ';
                 maze[k + 1][col] = ' ';
@@ -161,9 +182,8 @@ char **createMaze(int x, int y) {
         }
     }
 
-    int xCoin, yCoin;
-    int xPenalty, yPenalty;
-    int xDrill, yDrill;
+    // generazione monete, penalita' e trapani
+    coordinates coin, penalty, drill;
     int ctrCoin = 10, ctrPenalty = 5, ctrDrill = 2;
     bool isAvailableCoin, isAvailablePenalty, isAvailableDrill; // controllo cella
     while (ctrCoin || ctrPenalty || ctrDrill)
@@ -172,33 +192,33 @@ char **createMaze(int x, int y) {
         {
             do
             {
-                xCoin = rand() % (x - 2) + 1;
-                yCoin = rand() % (y - 2) + 1;
-                isAvailableCoin = (maze[xCoin][yCoin] == ' ' && !(xCoin == entrance && yCoin == 0) && !(xCoin == x_exit && yCoin == y - 1));
+                coin.x = rand() % (x - 2) + 1;
+                coin.y = rand() % (y - 2) + 1;
+                isAvailableCoin = (maze[coin.x][coin.y] == ' ' && !(coin.x == entrance.x && coin.y == entrance.y) && !(coin.x == exit_maze.x && coin.y == exit_maze.y));
             } while (!isAvailableCoin);
-            maze[xCoin][yCoin] = '$';
+            maze[coin.x][coin.y] = '$';
             ctrCoin--;
         }
         if (ctrPenalty > 0)
         {
             do
             {
-                xPenalty = rand() % (x - 2) + 1;
-                yPenalty = rand() % (y - 2) + 1;
-                isAvailablePenalty = (maze[xPenalty][yPenalty] == ' ' && !(xPenalty == entrance && yPenalty == 0) && !(xPenalty == x_exit && yPenalty == y - 1));
+                penalty.x = rand() % (x - 2) + 1;
+                penalty.y = rand() % (y - 2) + 1;
+                isAvailablePenalty = (maze[penalty.x][penalty.y] == ' ' && !(penalty.x == entrance.x && penalty.y == entrance.y) && !(penalty.x == exit_maze.x && penalty.y == exit_maze.y));
             } while (!isAvailablePenalty);
-            maze[xPenalty][yPenalty] = '!';
+            maze[penalty.x][penalty.y] = '!';
             ctrPenalty--;
         }
         if (ctrDrill > 0)
         {
             do
             {
-                xDrill = rand() % (x - 2) + 1;
-                yDrill = rand() % (y - 2) + 1;
-                isAvailableDrill = (maze[xDrill][yDrill] == ' ' && !(xDrill == entrance && yDrill == 0) && !(xDrill == x_exit && yDrill == y - 1));
+                drill.x = rand() % (x - 2) + 1;
+                drill.y = rand() % (y - 2) + 1;
+                isAvailableDrill = (maze[drill.x][drill.y] == ' ' && !(drill.x == entrance.x && drill.y == entrance.y) && !(drill.x == exit_maze.x && drill.y == exit_maze.y));
             } while (!isAvailableDrill);
-            maze[xDrill][xDrill] = 'T';
+            maze[drill.x][drill.x] = 'T';
             ctrDrill--;
         }
     }
@@ -206,11 +226,12 @@ char **createMaze(int x, int y) {
     return maze;
 }
 
-void printMaze(char **maze, int x, int y) {
-    for(int i = 0; i < x; i++) {
-        for(int j = 0; j < y; j++) {
+void printMaze(char **maze, int x, int y)
+{
+    for (int i = 0; i < x; i++)
+    {
+        for (int j = 0; j < y; j++)
             printf("%c", maze[i][j]);
-        }
         printf("\n");
     }
 }
@@ -219,13 +240,11 @@ char **inputFile(int M, int N)
 {
     char *line;
     char **maze;
-    line = malloc((M + 2) * sizeof(char*));
-    maze = malloc(N * sizeof(char*));
+    line = malloc((M + 2) * sizeof(char *));
+    maze = malloc(N * sizeof(char *));
 
     for (size_t i = 0; i < N; ++i)
-    {
-        maze[i] = malloc(M * sizeof(char*));
-    }
+        maze[i] = malloc(M * sizeof(char *));
 
     for (int i = 0; i < N; ++i)
     {
@@ -235,25 +254,29 @@ char **inputFile(int M, int N)
     }
 
     return maze;
-
 }
 
-bool checkDigitDirection(char direction) {
+bool checkDigitDirection(char direction)
+{
 
-    if(tolower(direction) == 'n' || tolower(direction) == 's' || tolower(direction) == 'e' || tolower(direction) == 'o') {
+    if (tolower(direction) == 'n' ||
+        tolower(direction) == 's' ||
+        tolower(direction) == 'e' ||
+        tolower(direction) == 'o')
         return true;
-    }
     return false;
 }
 
-char insertMove(){
-
+char insertMove()
+{
     char direction;
 
+    printf("Inserisci mossa: ");
     scanf("%c", &direction);
     fflush(stdin);
 
-    while(!checkDigitDirection(direction)) {
+    while (!checkDigitDirection(direction))
+    {
         scanf("%c", &direction);
         fflush(stdin);
     }
@@ -261,54 +284,53 @@ char insertMove(){
     return direction;
 }
 
-void finish(){
+void finish()
+{
     red();
     printf("You Win!!\n");
     resetColor();
 }
 
-bool checkFinish() {
-    if(playerX == exit.x && playerY == exit.y) {
+bool checkFinish()
+{
+    if (player.x == exit_maze.x && player.y == exit_maze.y)
         return true;
-    }
     return false;
 }
 
+void move(char direction, char **maze)
+{
 
-void move(char direction, char **maze) {
-
-    switch(tolower(direction)) {
-        case 'n':
-            if(maze[playerX - 1][playerY] != '#') {
-                maze[playerX][playerY] = ' ';
-                playerX -= 1;
-            }
-            break;
-        case 's':
-            if(maze[playerX + 1][playerY] != '#') {
-                maze[playerX][playerY] = ' ';
-                playerX += 1;
-            }
-            break;
-        case 'e':
-            if(maze[playerX - 1][playerY]) {
-                maze[playerX][playerY] = ' ';
-                playerY += 1;
-            }
-            break;
-        case 'o':
-            if(maze[playerX][playerY - 1] != '#') {
-                maze[playerX][playerY] = ' ';
-                playerY -= 1;
-            }
-            break;
+    switch (tolower(direction))
+    {
+    case 'n':
+        if (maze[player.x - 1][player.y] != '#')
+        {
+            maze[player.x][player.y] = ' ';
+            player.x -= 1;
+        }
+        break;
+    case 's':
+        if (maze[player.x + 1][player.y] != '#')
+        {
+            maze[player.x][player.y] = ' ';
+            player.x += 1;
+        }
+        break;
+    case 'e':
+        if (maze[player.x - 1][player.y])
+        {
+            maze[player.x][player.y] = ' ';
+            player.y += 1;
+        }
+        break;
+    case 'o':
+        if (maze[player.x][player.y - 1] != '#')
+        {
+            maze[player.x][player.y] = ' ';
+            player.y -= 1;
+        }
+        break;
     }
+    maze[player.x][player.y] = 'o';
 }
-
-
-
-
-
-
-
-

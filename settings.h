@@ -4,18 +4,20 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
-typedef struct Node{
-
+typedef struct Node
+{
     int x;
     int y;
     struct Node *next;
 } list_t;
 
-typedef struct Exit{
+typedef struct
+{
     int x;
     int y;
-} coordinate;
+} coordinates;
 
 // COLORS
 
@@ -49,11 +51,9 @@ char insertMove();
 
 bool checkFinish();
 
-bool move(char direction, char **maze); 
+bool move(char direction, char **maze);
 
 void finish();
-
-
 
 int checkPoints();
 
@@ -67,9 +67,4 @@ list_t *snakeResize(list_t *snake);
 
 void refresh();
 
-
-
-
-
 #endif
-
