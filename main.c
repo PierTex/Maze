@@ -20,6 +20,9 @@ int main()
         char movement = insertMove();
         move(movement, maze);
     }
+    refresh();
+    printMaze(maze, size.x, size.y);
+    finish();
 
     return 0;
 }
