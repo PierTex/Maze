@@ -3,25 +3,20 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <time.h>
-
-typedef struct Node
-{
-    int x;
-    int y;
-    struct Node *next;
-} list_t;
-
-typedef struct
-{
-    int x;
-    int y;
-} coordinates;
+#include "settings.h"
 
 coordinates player;
 coordinates entrance, exit_maze;
+coordinates backup;
+
 char direction;
 int points;
 int steps;
+int ctrCoin = 10, ctrPenalty = 5, ctrDrill = 2;
+
+list_t *snake_head;
+list_t *head;
+list_t *snake_tail = NULL;
 
 void refresh()
 {
@@ -83,6 +78,46 @@ void white()
     printf("\033[0:37m");
 }
 
+void create_snake_head()
+{
+    snake_head = (list_t *)malloc(sizeof(list_t));
+    head = snake_head;
+    head->next = snake_tail;
+}
+
+list_t *create_body()
+{
+    list_t *new_body = (list_t *)malloc(sizeof(list_t));
+    if (!new_body)
+    {
+        printf("\nErrore, allocamento memoria fallito\n");
+        exit(EXIT_FAILURE);
+    }
+    return new_body;
+}
+
+void snakeAppend(list_t *new_body, int x, int y)
+{
+    head->next = new_body;
+    new_body->body.x = x;
+    new_body->body.y = y;
+    new_body->next = snake_tail;
+}
+
+void snakeMovement(int x, int y)
+{
+    while (head->next)
+    {
+        head->body.x += x;
+        head->body.y += y;
+        head = head->next;
+    }
+    backup.x = head->body.x;
+    backup.y = head->body.y;
+    head->body.x += x;
+    head->body.y += y;
+}
+
 char **createMaze(int x, int y)
 {
     srand(time(NULL));
@@ -117,9 +152,11 @@ char **createMaze(int x, int y)
                 maze[row][col] = ' ';
                 if (col == entrance.y && row == entrance.x)
                 {
-                    player.x = entrance.x;
-                    player.y = entrance.y;
-                    maze[player.x][player.y] = 'o';
+                    create_snake_head();
+                    head->body.x = entrance.x;
+                    head->body.y = entrance.y;
+
+                    maze[head->body.x][head->body.y] = 'o';
                 }
                 if (col == exit_maze.y && row == exit_maze.x)
                     maze[row][col] = '_';
@@ -184,7 +221,6 @@ char **createMaze(int x, int y)
 
     // generazione monete, penalita' e trapani
     coordinates coin, penalty, drill;
-    int ctrCoin = 10, ctrPenalty = 5, ctrDrill = 2;
     bool isAvailableCoin, isAvailablePenalty, isAvailableDrill; // controllo cella
     while (ctrCoin || ctrPenalty || ctrDrill)
     {
@@ -293,44 +329,60 @@ void finish()
 
 bool checkFinish()
 {
-    if (player.x == exit_maze.x && player.y == exit_maze.y)
+    if (head->body.x == exit_maze.x && head->body.y == exit_maze.y)
         return true;
     return false;
 }
 
 void move(char direction, char **maze)
 {
-
+    head = snake_head;
     switch (tolower(direction))
     {
     case 'n':
-        if (maze[player.x - 1][player.y] != '#')
+        if (maze[head->body.x - 1][head->body.y] != '#')
         {
-            maze[player.x][player.y] = ' ';
-            player.x -= 1;
+            if (maze[snake_head->body.x - 1][snake_head->body.y] == '$')
+            {
+                snakeMovement(-1, 0);
+                snakeAppend(create_body(), backup.x, backup.y);
+                ctrCoin++;
+            }
+            else
+            {
+                if (maze[snake_head->body.x - 1][snake_head->body.y] == '!')
+                {
+                    // snakeResize();
+                    ctrPenalty++;
+                }
+                else if (maze[snake_head->body.x - 1][snake_head->body.y] == 'T')
+                    ctrDrill += 3;
+                snakeMovement(-1, 0);
+            }
         }
         break;
     case 's':
-        if (maze[player.x + 1][player.y] != '#')
+        if (maze[head->body.x + 1][head->body.y] != '#')
         {
-            maze[player.x][player.y] = ' ';
-            player.x += 1;
+            maze[head->body.x][head->body.y] = ' ';
+            head->body.x += 1;
         }
         break;
     case 'e':
-        if (maze[player.x - 1][player.y])
+        if (maze[head->body.x - 1][head->body.y])
         {
-            maze[player.x][player.y] = ' ';
-            player.y += 1;
+            maze[head->body.x][head->body.y] = ' ';
+            head->body.y += 1;
         }
         break;
     case 'o':
-        if (maze[player.x][player.y - 1] != '#')
+        if (maze[head->body.x][head->body.y - 1] != '#')
         {
-            maze[player.x][player.y] = ' ';
-            player.y -= 1;
+            maze[head->body.x][head->body.y] = ' ';
+            head->body.y -= 1;
         }
         break;
     }
-    maze[player.x][player.y] = 'o';
+    maze[snake_head->body.x][snake_head->body.y] = 'o';
+    // creare funzione per aggiornamento serpente nel maze (anche una funzione clear)
 }
