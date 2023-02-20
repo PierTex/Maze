@@ -12,7 +12,7 @@ coordinates backup;
 char direction;
 int points;
 int steps;
-int ctrCoin = 10, ctrPenalty = 5, ctrDrill = 2;
+int coins = 10, penalties = 5, drills = 2;
 
 list_t *snake_head;
 list_t *head;
@@ -118,13 +118,16 @@ void snakeMovement(int x, int y)
     head->body.y += y;
     while (head->next)
     {
-        
         head = head->next;
+        current_pos.x = head->body.x;
+        current_pos.y = head->body.y;
+        head->body.x = last_pos.x;
+        head->body.y = last_pos.y;
+        last_pos.x = current_pos.x;
+        last_pos.y = current_pos.y;
     }
-    backup.x = head->body.x;
-    backup.y = head->body.y;
-    head->body.x += x;
-    head->body.y += y;
+    backup.x = last_pos.x;
+    backup.y = last_pos.y;
 }
 
 void snakeShrink()
@@ -136,7 +139,7 @@ void snakeShrink()
         ptrBackup = head;
         head = head->next;
         i++;
-    } while (i < ctrCoin);
+    } while (i <= coins);
     while (head)
     {
         tmp = head;
@@ -273,9 +276,9 @@ char **createMaze(int x, int y)
     // generazione monete, penalita' e trapani
     coordinates coin, penalty, drill;
     bool isAvailableCoin, isAvailablePenalty, isAvailableDrill; // controllo cella
-    while (ctrCoin || ctrPenalty || ctrDrill)
+    while (coins || penalties || drills)
     {
-        if (ctrCoin > 0)
+        if (coins > 0)
         {
             do
             {
@@ -284,9 +287,9 @@ char **createMaze(int x, int y)
                 isAvailableCoin = (maze[coin.x][coin.y] == ' ' && !(coin.x == entrance.x && coin.y == entrance.y) && !(coin.x == exit_maze.x && coin.y == exit_maze.y));
             } while (!isAvailableCoin);
             maze[coin.x][coin.y] = '$';
-            ctrCoin--;
+            coins--;
         }
-        if (ctrPenalty > 0)
+        if (penalties > 0)
         {
             do
             {
@@ -295,9 +298,9 @@ char **createMaze(int x, int y)
                 isAvailablePenalty = (maze[penalty.x][penalty.y] == ' ' && !(penalty.x == entrance.x && penalty.y == entrance.y) && !(penalty.x == exit_maze.x && penalty.y == exit_maze.y));
             } while (!isAvailablePenalty);
             maze[penalty.x][penalty.y] = '!';
-            ctrPenalty--;
+            penalties--;
         }
-        if (ctrDrill > 0)
+        if (drills > 0)
         {
             do
             {
@@ -306,7 +309,7 @@ char **createMaze(int x, int y)
                 isAvailableDrill = (maze[drill.x][drill.y] == ' ' && !(drill.x == entrance.x && drill.y == entrance.y) && !(drill.x == exit_maze.x && drill.y == exit_maze.y));
             } while (!isAvailableDrill);
             maze[drill.x][drill.x] = 'T';
-            ctrDrill--;
+            drills--;
         }
     }
 
@@ -358,7 +361,7 @@ char insertMove()
 {
     char direction;
 
-    printf("Monete: %d\tPenalita': %d\tTrapani: %d\n\n", ctrCoin, ctrPenalty, ctrDrill);
+    printf("Monete: %d\tPenalita': %d\tTrapani: %d\n\n", coins, penalties, drills);
     printf("Inserisci mossa: ");
     scanf("%c", &direction);
     fflush(stdin);
@@ -399,23 +402,26 @@ void move(char direction, char **maze)
             {
                 snakeMovement(-1, 0);
                 snakeAppend(create_body(), backup.x, backup.y);
-                ctrCoin++;
+                coins++;
             }
-            else
+            else if (maze[snake_head->body.x - 1][snake_head->body.y] == '!')
             {
-                if (maze[snake_head->body.x - 1][snake_head->body.y] == '!')
+                snakeMovement(-1, 0);
+                if (coins)
                 {
-                    if (ctrCoin)
-                    {
-                        ctrCoin /= 2;
-                        snakeShrink();
-                    }
-                    ctrPenalty++;
+                    head = snake_head;
+                    coins /= 2;
+                    snakeShrink();
                 }
-                else if (maze[snake_head->body.x - 1][snake_head->body.y] == 'T')
-                    ctrDrill += 3;
+                penalties++;
+            }
+            else if (maze[snake_head->body.x - 1][snake_head->body.y] == 'T')
+            {
+                drills += 3;
                 snakeMovement(-1, 0);
             }
+            else
+                snakeMovement(-1, 0);
         }
         break;
     case 's':
@@ -425,49 +431,55 @@ void move(char direction, char **maze)
             {
                 snakeMovement(+1, 0);
                 snakeAppend(create_body(), backup.x, backup.y);
-                ctrCoin++;
+                coins++;
             }
-            else
+            else if (maze[snake_head->body.x + 1][snake_head->body.y] == '!')
             {
-                if (maze[snake_head->body.x + 1][snake_head->body.y] == '!')
+                snakeMovement(+1, 0);
+                if (coins)
                 {
-                    if (ctrCoin)
-                    {
-                        ctrCoin /= 2;
-                        snakeShrink();
-                    }
-                    ctrPenalty++;
+                    head = snake_head;
+                    coins /= 2;
+                    snakeShrink();
                 }
-                else if (maze[snake_head->body.x + 1][snake_head->body.y] == 'T')
-                    ctrDrill += 3;
+                penalties++;
+            }
+            else if (maze[snake_head->body.x + 1][snake_head->body.y] == 'T')
+            {
+                drills += 3;
                 snakeMovement(+1, 0);
             }
+            else
+                snakeMovement(+1, 0);
         }
         break;
     case 'e':
-        if (maze[head->body.x][head->body.y + 1])
+        if (maze[head->body.x][head->body.y + 1] != '#')
         {
             if (maze[snake_head->body.x][snake_head->body.y + 1] == '$')
             {
                 snakeMovement(0, +1);
                 snakeAppend(create_body(), backup.x, backup.y);
-                ctrCoin++;
+                coins++;
             }
-            else
+            else if (maze[snake_head->body.x][snake_head->body.y + 1] == '!')
             {
-                if (maze[snake_head->body.x][snake_head->body.y + 1] == '!')
+                snakeMovement(0, +1);
+                if (coins)
                 {
-                    if (ctrCoin)
-                    {
-                        ctrCoin /= 2;
-                        snakeShrink();
-                    }
-                    ctrPenalty++;
+                    head = snake_head;
+                    coins /= 2;
+                    snakeShrink();
                 }
-                else if (maze[snake_head->body.x][snake_head->body.y + 1] == 'T')
-                    ctrDrill += 3;
+                penalties++;
+            }
+            else if (maze[snake_head->body.x][snake_head->body.y + 1] == 'T')
+            {
+                drills += 3;
                 snakeMovement(0, +1);
             }
+            else
+                snakeMovement(0, +1);
         }
         break;
     case 'o':
@@ -477,23 +489,26 @@ void move(char direction, char **maze)
             {
                 snakeMovement(0, -1);
                 snakeAppend(create_body(), backup.x, backup.y);
-                ctrCoin++;
+                coins++;
             }
-            else
+            else if (maze[snake_head->body.x][snake_head->body.y - 1] == '!')
             {
-                if (maze[snake_head->body.x][snake_head->body.y - 1] == '!')
+                snakeMovement(0, -1);
+                if (coins)
                 {
-                    if (ctrCoin)
-                    {
-                        ctrCoin /= 2;
-                        snakeShrink();
-                    }
-                    ctrPenalty++;
+                    head = snake_head;
+                    coins /= 2;
+                    snakeShrink();
                 }
-                else if (maze[snake_head->body.x][snake_head->body.y - 1] == 'T')
-                    ctrDrill += 3;
+                penalties++;
+            }
+            else if (maze[snake_head->body.x][snake_head->body.y - 1] == 'T')
+            {
+                drills += 3;
                 snakeMovement(0, -1);
             }
+            else
+                snakeMovement(0, -1);
         }
         break;
     }
