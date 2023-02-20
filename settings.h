@@ -41,7 +41,7 @@ void finish();
 int checkPoints();
 void printPoints(int points);
 void snakeAppend(list_t *new_body, int x, int y);
-void snakeResize(list_t *snake);
+void snakeShrink();
 void refresh();
 
 #endif
