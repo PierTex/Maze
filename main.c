@@ -18,7 +18,7 @@ int main()
         refresh();
         printMaze(maze, size.x, size.y);
         char movement = insertMove();
-        move(movement, maze);
+        move(movement, maze, size.x, size.y);
     }
     refresh();
     printMaze(maze, size.x, size.y);

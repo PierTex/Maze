@@ -361,7 +361,8 @@ char insertMove()
 {
     char direction;
 
-    printf("Monete: %d\tPenalita': %d\tTrapani: %d\n\n", coins, penalties, drills);
+    // printf("head\tx: %d\ty: %d\n", snake_head->body.x, snake_head->body.y);
+    printf("\nMonete:\t\t%d\nPenalita':\t%d\nTrapani:\t%d\n\n", coins, penalties, drills);
     printf("Inserisci mossa: ");
     scanf("%c", &direction);
     fflush(stdin);
@@ -389,14 +390,16 @@ bool checkFinish()
     return false;
 }
 
-void move(char direction, char **maze)
+void move(char direction, char **maze, int x, int y)
 {
+    bool supreme_wall;
     head = snake_head;
     snakeClear(maze);
     switch (tolower(direction))
     {
     case 'n':
-        if (maze[head->body.x - 1][head->body.y] != '#')
+        supreme_wall = snake_head->body.x - 1 < 0;
+        if (!supreme_wall && maze[snake_head->body.x - 1][snake_head->body.y] != '#')
         {
             if (maze[snake_head->body.x - 1][snake_head->body.y] == '$')
             {
@@ -423,9 +426,15 @@ void move(char direction, char **maze)
             else
                 snakeMovement(-1, 0);
         }
+        else if (!supreme_wall && drills)
+        {
+            snakeMovement(-1, 0);
+            drills--;
+        }
         break;
     case 's':
-        if (maze[head->body.x + 1][head->body.y] != '#')
+        supreme_wall = snake_head->body.x + 1 > x - 1;
+        if (!supreme_wall && maze[snake_head->body.x + 1][snake_head->body.y] != '#')
         {
             if (maze[snake_head->body.x + 1][snake_head->body.y] == '$')
             {
@@ -452,9 +461,15 @@ void move(char direction, char **maze)
             else
                 snakeMovement(+1, 0);
         }
+        else if (!supreme_wall && drills)
+        {
+            snakeMovement(+1, 0);
+            drills--;
+        }
         break;
     case 'e':
-        if (maze[head->body.x][head->body.y + 1] != '#')
+        supreme_wall = snake_head->body.y + 1 > y - 1;
+        if (!supreme_wall && maze[snake_head->body.x][snake_head->body.y + 1] != '#')
         {
             if (maze[snake_head->body.x][snake_head->body.y + 1] == '$')
             {
@@ -481,9 +496,15 @@ void move(char direction, char **maze)
             else
                 snakeMovement(0, +1);
         }
+        else if (!supreme_wall && drills)
+        {
+            snakeMovement(0, +1);
+            drills--;
+        }
         break;
     case 'o':
-        if (maze[head->body.x][head->body.y - 1] != '#')
+        supreme_wall = snake_head->body.y - 1 < 0;
+        if (!supreme_wall && maze[snake_head->body.x][snake_head->body.y - 1] != '#')
         {
             if (maze[snake_head->body.x][snake_head->body.y - 1] == '$')
             {
@@ -509,6 +530,11 @@ void move(char direction, char **maze)
             }
             else
                 snakeMovement(0, -1);
+        }
+        else if (!supreme_wall && drills)
+        {
+            snakeMovement(0, -1);
+            drills--;
         }
         break;
     }
