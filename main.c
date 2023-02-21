@@ -8,6 +8,8 @@ coordinates size;
 
 int main()
 {
+    srand(time(NULL));
+
     size.x = 10;
     size.y = 20;
 
@@ -22,7 +24,7 @@ int main()
     }
     refresh();
     printMaze(maze, size.x, size.y);
-    finish();
+    finish(maze, size.x);
 
     return 0;
 }

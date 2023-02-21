@@ -33,6 +33,17 @@ void refresh()
 #endif
 }
 
+void new_line()
+{
+#ifdef __APPLE__
+    printf("\n");
+#endif
+
+#ifdef __linux__
+    printf("\n");
+#endif
+}
+
 void resetColor()
 {
     printf("\033[0m");
@@ -82,6 +93,24 @@ int score()
 {
     int max = 1000;
     return max + coins * 10 - steps;
+}
+
+void freeSnake(list_t *l)
+{
+    list_t *tmp;
+    while (head)
+    {
+        tmp = head;
+        head = head->next;
+        free(tmp);
+    }
+}
+
+void freeMaze(char **maze, int x)
+{
+    for (size_t i = 0; i < x; ++i)
+        free(maze[i]);
+    free(maze);
 }
 
 void create_snake_head()
@@ -140,19 +169,14 @@ void snakeMovement(int x, int y)
 void snakeShrink()
 {
     int i = 0;
-    list_t *ptrBackup, *tmp;
+    list_t *ptrBackup;
     do
     {
         ptrBackup = head;
         head = head->next;
         i++;
     } while (i <= coins);
-    while (head)
-    {
-        tmp = head;
-        head = head->next;
-        free(tmp);
-    }
+    freeSnake(head);
     head = ptrBackup;
     head->next = snake_tail;
 }
@@ -206,11 +230,9 @@ void snakePrint(char **maze)
 
 char **createMaze(int x, int y)
 {
-    srand(time(NULL));
-
     char **maze = malloc(x * sizeof(char *));
 
-    for (int i = 0; i < y; i++)
+    for (int i = 0; i < x; i++)
         maze[i] = malloc(y * sizeof(char *));
 
     int nWalls, pHole, ctr, ctrCol;
@@ -362,11 +384,15 @@ char **inputFile(int M, int N)
 {
     char *line;
     char **maze;
+
     line = malloc((M + 2) * sizeof(char *));
     maze = malloc(N * sizeof(char *));
 
     for (size_t i = 0; i < N; ++i)
         maze[i] = malloc(M * sizeof(char *));
+
+    char bin;
+    scanf("%c", &bin);
 
     for (int i = 0; i < N; ++i)
     {
@@ -380,7 +406,6 @@ char **inputFile(int M, int N)
 
 bool checkDigitDirection(char direction)
 {
-
     if (tolower(direction) == 'n' ||
         tolower(direction) == 's' ||
         tolower(direction) == 'e' ||
@@ -393,7 +418,6 @@ char insertMove()
 {
     char direction;
 
-    // printf("head\tx: %d\ty: %d\n", snake_head->body.x, snake_head->body.y);
     printf("\nMonete:\t\t%d\nPenalita':\t%d\nTrapani:\t%d\n\n", coins, penalties, drills);
     printf("Inserisci mossa: ");
     scanf("%c", &direction);
@@ -408,10 +432,13 @@ char insertMove()
     return direction;
 }
 
-void finish()
+void finish(char **maze, int x)
 {
+    freeSnake(snake_head);
+    freeMaze(maze, x);
     red();
-    printf("\nHai vinto!!!\nPunteggio: %d\n\n", score());
+    printf("\nHai vinto!!!\nPunteggio: %d\n", score());
+    new_line();
     resetColor();
 }
 

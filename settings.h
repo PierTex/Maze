@@ -37,7 +37,7 @@ bool checkDigitDirection(char direction);
 char insertMove();
 bool checkFinish();
 void move(char direction, char **maze, int x, int y);
-void finish();
+void finish(char **maze, int x);
 int checkPoints();
 void printPoints(int points);
 void snakeAppend(list_t *new_body, int x, int y);
