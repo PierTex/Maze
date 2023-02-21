@@ -6,12 +6,12 @@
 #include "settings.h"
 
 coordinates player;
-coordinates entrance, exit_maze;
+coordinates entrance, ending;
 coordinates backup;
 
 char direction;
 int points;
-int steps;
+int steps = 0;
 int coins = 10, penalties = 5, drills = 2;
 
 list_t *snake_head;
@@ -78,6 +78,12 @@ void white()
     printf("\033[0:37m");
 }
 
+int score()
+{
+    int max = 1000;
+    return max + coins * 10 - steps;
+}
+
 void create_snake_head()
 {
     snake_head = (list_t *)malloc(sizeof(list_t));
@@ -128,6 +134,7 @@ void snakeMovement(int x, int y)
     }
     backup.x = last_pos.x;
     backup.y = last_pos.y;
+    steps++;
 }
 
 void snakeShrink()
@@ -150,6 +157,29 @@ void snakeShrink()
     head->next = snake_tail;
 }
 
+void snakeEatingHimself()
+{
+    int i = 0;
+    bool found = false;
+    head = snake_head;
+    head = head->next;
+    while (head && !found)
+    {
+        if (snake_head->body.x == head->body.x &&
+            snake_head->body.y == head->body.y)
+        {
+            found = true;
+            coins = i;
+        }
+        else
+            i++;
+        head = head->next;
+    }
+    head = snake_head;
+    if (found)
+        snakeShrink();
+}
+
 void snakeClear(char **maze)
 {
     head = snake_head;
@@ -164,6 +194,8 @@ void snakeClear(char **maze)
 void snakePrint(char **maze)
 {
     head = snake_head;
+    maze[head->body.x][head->body.y] = '@';
+    head = head->next;
     while (head)
     {
         maze[head->body.x][head->body.y] = 'o';
@@ -187,8 +219,8 @@ char **createMaze(int x, int y)
     // creazione entrata e uscita
     entrance.x = rand() % (x - 2) + 1;
     entrance.y = 0;
-    exit_maze.x = rand() % (x - 2) + 1;
-    exit_maze.y = y - 1;
+    ending.x = rand() % (x - 2) + 1;
+    ending.y = y - 1;
 
     // stampa bordo
     bool frame;         // controllo bordo labirinto
@@ -198,7 +230,7 @@ char **createMaze(int x, int y)
         for (int col = 0; col < y; ++col)
         {
             frame = (row == 0 || row == x - 1 || col == 0 || col == y - 1);
-            entrance_exit = ((col == entrance.y && row == entrance.x) || (col == exit_maze.y && row == exit_maze.x));
+            entrance_exit = ((col == entrance.y && row == entrance.x) || (col == ending.y && row == ending.x));
             if (frame && !entrance_exit)
                 maze[row][col] = '#';
             else
@@ -210,9 +242,9 @@ char **createMaze(int x, int y)
                     head->body.x = entrance.x;
                     head->body.y = entrance.y;
 
-                    maze[head->body.x][head->body.y] = 'o';
+                    maze[head->body.x][head->body.y] = '@';
                 }
-                if (col == exit_maze.y && row == exit_maze.x)
+                if (col == ending.y && row == ending.x)
                     maze[row][col] = '_';
             }
         }
@@ -284,7 +316,7 @@ char **createMaze(int x, int y)
             {
                 coin.x = rand() % (x - 2) + 1;
                 coin.y = rand() % (y - 2) + 1;
-                isAvailableCoin = (maze[coin.x][coin.y] == ' ' && !(coin.x == entrance.x && coin.y == entrance.y) && !(coin.x == exit_maze.x && coin.y == exit_maze.y));
+                isAvailableCoin = (maze[coin.x][coin.y] == ' ' && !(coin.x == entrance.x && coin.y == entrance.y) && !(coin.x == ending.x && coin.y == ending.y));
             } while (!isAvailableCoin);
             maze[coin.x][coin.y] = '$';
             coins--;
@@ -295,7 +327,7 @@ char **createMaze(int x, int y)
             {
                 penalty.x = rand() % (x - 2) + 1;
                 penalty.y = rand() % (y - 2) + 1;
-                isAvailablePenalty = (maze[penalty.x][penalty.y] == ' ' && !(penalty.x == entrance.x && penalty.y == entrance.y) && !(penalty.x == exit_maze.x && penalty.y == exit_maze.y));
+                isAvailablePenalty = (maze[penalty.x][penalty.y] == ' ' && !(penalty.x == entrance.x && penalty.y == entrance.y) && !(penalty.x == ending.x && penalty.y == ending.y));
             } while (!isAvailablePenalty);
             maze[penalty.x][penalty.y] = '!';
             penalties--;
@@ -306,7 +338,7 @@ char **createMaze(int x, int y)
             {
                 drill.x = rand() % (x - 2) + 1;
                 drill.y = rand() % (y - 2) + 1;
-                isAvailableDrill = (maze[drill.x][drill.y] == ' ' && !(drill.x == entrance.x && drill.y == entrance.y) && !(drill.x == exit_maze.x && drill.y == exit_maze.y));
+                isAvailableDrill = (maze[drill.x][drill.y] == ' ' && !(drill.x == entrance.x && drill.y == entrance.y) && !(drill.x == ending.x && drill.y == ending.y));
             } while (!isAvailableDrill);
             maze[drill.x][drill.x] = 'T';
             drills--;
@@ -379,13 +411,13 @@ char insertMove()
 void finish()
 {
     red();
-    printf("You Win!!\n");
+    printf("\nHai vinto!!!\nPunteggio: %d\n\n", score());
     resetColor();
 }
 
 bool checkFinish()
 {
-    if (head->body.x == exit_maze.x && head->body.y == exit_maze.y)
+    if (head->body.x == ending.x && head->body.y == ending.y)
         return true;
     return false;
 }
@@ -424,7 +456,11 @@ void move(char direction, char **maze, int x, int y)
                 snakeMovement(-1, 0);
             }
             else
+            {
                 snakeMovement(-1, 0);
+                if (coins > 1)
+                    snakeEatingHimself();
+            }
         }
         else if (!supreme_wall && drills)
         {
@@ -459,7 +495,11 @@ void move(char direction, char **maze, int x, int y)
                 snakeMovement(+1, 0);
             }
             else
+            {
                 snakeMovement(+1, 0);
+                if (coins > 1)
+                    snakeEatingHimself();
+            }
         }
         else if (!supreme_wall && drills)
         {
@@ -494,7 +534,11 @@ void move(char direction, char **maze, int x, int y)
                 snakeMovement(0, +1);
             }
             else
+            {
                 snakeMovement(0, +1);
+                if (coins > 1)
+                    snakeEatingHimself();
+            }
         }
         else if (!supreme_wall && drills)
         {
@@ -529,7 +573,11 @@ void move(char direction, char **maze, int x, int y)
                 snakeMovement(0, -1);
             }
             else
+            {
                 snakeMovement(0, -1);
+                if (coins > 1)
+                    snakeEatingHimself();
+            }
         }
         else if (!supreme_wall && drills)
         {
