@@ -95,6 +95,7 @@ int score()
     return max + coins * 10 - steps;
 }
 
+// Libera le celle di memoria dall'allocazione iniziale (a partire dal nodo dato come parametro)
 void freeSnake(list_t *l)
 {
     list_t *tmp;
@@ -106,6 +107,7 @@ void freeSnake(list_t *l)
     }
 }
 
+// Libera TUTTE le celle di memoria occupate per il maze
 void freeMaze(char **maze, int x)
 {
     for (size_t i = 0; i < x; ++i)
@@ -113,6 +115,7 @@ void freeMaze(char **maze, int x)
     free(maze);
 }
 
+// Crea la testa iniziale del serpente
 void create_snake_head()
 {
     snake_head = (list_t *)malloc(sizeof(list_t));
@@ -125,6 +128,7 @@ void create_snake_head()
     head->next = snake_tail;
 }
 
+// Crea il nodo (pezzo del corpo del serpente) che andrà utilizzato nella funzione append
 list_t *create_body()
 {
     list_t *new_body = (list_t *)malloc(sizeof(list_t));
@@ -136,6 +140,7 @@ list_t *create_body()
     return new_body;
 }
 
+// Accoda il nodo creato sopra nel caso ci si imbatta nella moneta
 void snakeAppend(list_t *new_body, int x, int y)
 {
     head->next = new_body;
@@ -144,6 +149,7 @@ void snakeAppend(list_t *new_body, int x, int y)
     new_body->next = snake_tail;
 }
 
+// Opera su tutta la lista, muove la testa nella direzione desiderata e sovrascrive ogni nodo con la posizione del nodo precedente
 void snakeMovement(int x, int y)
 {
     coordinates last_pos, current_pos;
@@ -166,6 +172,7 @@ void snakeMovement(int x, int y)
     steps++;
 }
 
+// Riduce la dimensione del serpente nel caso si imbatta su una penalità o su se stesso
 void snakeShrink()
 {
     int i = 0;
@@ -181,6 +188,7 @@ void snakeShrink()
     head->next = snake_tail;
 }
 
+// Controlla se la posizione corrente della testa corrisponda alle coordinate di una parte del corpo, se sì allora verrà chiamata la funzione shrink altrimenti nulla
 void snakeEatingHimself()
 {
     int i = 0;
@@ -204,6 +212,7 @@ void snakeEatingHimself()
         snakeShrink();
 }
 
+// Sovrascrive i caratteri del maze togliendo il serpente (per poi stampare quello con le posizioni modificate tramite snakePrint)
 void snakeClear(char **maze)
 {
     head = snake_head;
@@ -215,6 +224,7 @@ void snakeClear(char **maze)
     head = snake_head;
 }
 
+// Stampa il serpente con le posizioni modificate
 void snakePrint(char **maze)
 {
     head = snake_head;
@@ -228,6 +238,7 @@ void snakePrint(char **maze)
     head = snake_head;
 }
 
+// Crea il labirinto di dimensioni x e y con entrata, uscita e corridoi completamente random
 char **createMaze(int x, int y)
 {
     char **maze = malloc(x * sizeof(char *));
@@ -370,6 +381,7 @@ char **createMaze(int x, int y)
     return maze;
 }
 
+// Stampa su schermo del labirinito
 void printMaze(char **maze, int x, int y)
 {
     for (int i = 0; i < x; i++)
@@ -380,6 +392,7 @@ void printMaze(char **maze, int x, int y)
     }
 }
 
+// Funzione per immettere il labirinto scelto dall'utente
 char **inputFile(int M, int N)
 {
     char *line;
@@ -404,6 +417,7 @@ char **inputFile(int M, int N)
     return maze;
 }
 
+// La mossa presa in input è accettabile?
 bool checkDigitDirection(char direction)
 {
     if (tolower(direction) == 'n' ||
@@ -414,6 +428,7 @@ bool checkDigitDirection(char direction)
     return false;
 }
 
+// Inserimento della mossa e output dei raccoglibili presi fino a quel momento
 char insertMove()
 {
     char direction;
@@ -432,6 +447,7 @@ char insertMove()
     return direction;
 }
 
+// Operazioni di conclusione partita
 void finish(char **maze, int x)
 {
     freeSnake(snake_head);
@@ -442,6 +458,7 @@ void finish(char **maze, int x)
     resetColor();
 }
 
+// Controlla che le coordinate della testa corrispondano a quelle dell'uscita
 bool checkFinish()
 {
     if (head->body.x == ending.x && head->body.y == ending.y)
@@ -449,6 +466,7 @@ bool checkFinish()
     return false;
 }
 
+// Operazioni per i controlli e l'eventuale movimento del serpente
 void move(char direction, char **maze, int x, int y)
 {
     bool supreme_wall;
