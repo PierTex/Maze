@@ -9,7 +9,7 @@ coordinates player;
 coordinates entrance, ending;
 coordinates backup;
 
-char direction;
+char direction, automove;
 int points;
 int steps = 0;
 int coins = 10, penalties = 5, drills = 2;
@@ -89,6 +89,7 @@ void white()
     printf("\033[0:37m");
 }
 
+// Calcolo punteggio finale
 int score()
 {
     int max = 1000;
@@ -632,4 +633,130 @@ void move(char direction, char **maze, int x, int y)
         break;
     }
     snakePrint(maze);
+}
+
+// Funzioni AI
+
+// Trova l'entrata e l'uscita del maze dato in input dall'utente
+void find_entrance_exit(char **maze, int x, int y)
+{
+    create_snake_head();
+    for (int row = 0; row < x; ++row)
+        for (int col = 0; col < y; ++col)
+        {
+            if (maze[row][col] == 'o')
+            {
+                entrance.x = row;
+                entrance.y = col;
+                if (entrance.x == 0)
+                    automove = 'S';
+                else if (entrance.x == x - 1)
+                    automove = 'N';
+                else if (entrance.y == 0)
+                    automove = 'E';
+                else if (entrance.y == y - 1)
+                    automove = 'O';
+                snake_head->body.x = row;
+                snake_head->body.y = col;
+            }
+            if (maze[row][col] == '_')
+            {
+                ending.x = row;
+                ending.y = col;
+            }
+        }
+}
+
+// funzione "move" ma utilizzata nell'AI
+void move_right_hand(char **maze, int x, int y)
+{
+    switch (toupper(automove))
+    {
+    case 'N':
+        if (!(snake_head->body.y + 1 > y - 1) && maze[snake_head->body.x][snake_head->body.y + 1] != '#')
+        {
+            automove = 'E';
+            snakeMovement(0, +1);
+        }
+        else if (!(snake_head->body.x - 1 < 0) && maze[snake_head->body.x - 1][snake_head->body.y] != '#')
+        {
+            snakeMovement(-1, 0);
+        }
+        else if (!(snake_head->body.y - 1 < 0) && maze[snake_head->body.x][snake_head->body.y - 1] != '#')
+        {
+            automove = 'O';
+            snakeMovement(0, -1);
+        }
+        else
+        {
+            automove = 'S';
+            snakeMovement(+1, 0);
+        }
+        break;
+    case 'S':
+        if (!(snake_head->body.y - 1 < 0) && maze[snake_head->body.x][snake_head->body.y - 1] != '#')
+        {
+            automove = 'O';
+            snakeMovement(0, -1);
+        }
+        else if (!(snake_head->body.x + 1 > x - 1) && maze[snake_head->body.x + 1][snake_head->body.y] != '#')
+        {
+            snakeMovement(+1, 0);
+        }
+        else if (!(snake_head->body.y + 1 > y - 1) && maze[snake_head->body.x][snake_head->body.y + 1] != '#')
+        {
+            automove = 'E';
+            snakeMovement(0, +1);
+        }
+        else
+        {
+            automove = 'N';
+            snakeMovement(-1, 0);
+        }
+        break;
+    case 'E':
+        if (!(snake_head->body.x + 1 > x - 1) && maze[snake_head->body.x + 1][snake_head->body.y] != '#')
+        {
+            automove = 'S';
+            snakeMovement(+1, 0);
+        }
+        else if (!(snake_head->body.y + 1 > y - 1) && maze[snake_head->body.x][snake_head->body.y + 1] != '#')
+        {
+            snakeMovement(0, +1);
+        }
+        else if (!(snake_head->body.x - 1 < 0) && maze[snake_head->body.x - 1][snake_head->body.y] != '#')
+        {
+            automove = 'N';
+            snakeMovement(-1, 0);
+        }
+        else
+        {
+            automove = 'O';
+            snakeMovement(0, -1);
+        }
+        break;
+    case 'O':
+        if (!(snake_head->body.x - 1 < 0) && maze[snake_head->body.x - 1][snake_head->body.y] != '#')
+        {
+            automove = 'N';
+            snakeMovement(-1, 0);
+        }
+        else if (!(snake_head->body.y - 1 < 0) && maze[snake_head->body.x][snake_head->body.y - 1] != '#')
+        {
+            snakeMovement(0, -1);
+        }
+        else if (!(snake_head->body.x + 1 > x - 1) && maze[snake_head->body.x + 1][snake_head->body.y] != '#')
+        {
+            automove = 'S';
+            snakeMovement(+1, 0);
+        }
+        else
+        {
+            automove = 'E';
+            snakeMovement(0, +1);
+        }
+        break;
+    }
+    maze[snake_head->body.x][snake_head->body.y] = '.';
+    steps++;
 }

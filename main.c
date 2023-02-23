@@ -6,10 +6,22 @@
 
 coordinates size;
 
-int main()
+void AI_right_hand()
 {
-    srand(time(NULL));
+    int M, N;
+    scanf(" %d", &M);
+    scanf(" %d", &N);
+    char **maze = inputFile(M, N);
+    find_entrance_exit(maze, N, M);
+    while (!checkFinish())
+        move_right_hand(maze, N, M);
+    printf("\n");
+    printMaze(maze, N, M);
+    finish(maze, N);
+}
 
+void interactive()
+{
     size.x = 10;
     size.y = 20;
 
@@ -25,6 +37,14 @@ int main()
     refresh();
     printMaze(maze, size.x, size.y);
     finish(maze, size.x);
+}
+
+int main()
+{
+    srand(time(NULL));
+
+    // interactive();
+    AI_right_hand();
 
     return 0;
 }
