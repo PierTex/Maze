@@ -5,17 +5,18 @@
 #include <time.h>
 #include "settings.h"
 
-coordinates entrance, ending;
-coordinates backup;
+coordinates entrance, ending, backup;
 
 char direction, automove;
 int points;
-int steps = 0;
+unsigned steps = 0;
 int coins, penalties, drills;
 
 list_t *snake_head;
 list_t *head;
 list_t *snake_tail = NULL;
+
+char *path;
 
 void refresh()
 {
@@ -470,6 +471,33 @@ bool checkFinish()
     return false;
 }
 
+// Controlla che nella cella della testa del serpente ci sia o meno un elemento raccoglibile (prima di sovrascriverlo con '.' nel caso AI sempre a destra)
+void check_collectable(char **maze)
+{
+    if (maze[snake_head->body.x][snake_head->body.y] == '$')
+    {
+        snakeAppend(create_body(), backup.x, backup.y);
+        coins++;
+    }
+    else if (maze[snake_head->body.x][snake_head->body.y] == '!')
+    {
+        if (coins)
+        {
+            head = snake_head;
+            coins /= 2;
+            snakeShrink();
+        }
+        penalties++;
+    }
+    else if (maze[snake_head->body.x][snake_head->body.y] == 'T')
+        drills += 3;
+    else
+    {
+        if (coins > 1)
+            snakeEatingHimself();
+    }
+}
+
 // Operazioni per i controlli e l'eventuale movimento del serpente
 void move(char direction, char **maze, int x, int y)
 {
@@ -480,165 +508,60 @@ void move(char direction, char **maze, int x, int y)
     {
     case 'n':
         supreme_wall = snake_head->body.x - 1 < 0;
-        if (!supreme_wall && maze[snake_head->body.x - 1][snake_head->body.y] != '#')
-        {
-            if (maze[snake_head->body.x - 1][snake_head->body.y] == '$')
-            {
-                snakeMovement(-1, 0);
-                snakeAppend(create_body(), backup.x, backup.y);
-                coins++;
-            }
-            else if (maze[snake_head->body.x - 1][snake_head->body.y] == '!')
-            {
-                snakeMovement(-1, 0);
-                if (coins)
-                {
-                    head = snake_head;
-                    coins /= 2;
-                    snakeShrink();
-                }
-                penalties++;
-            }
-            else if (maze[snake_head->body.x - 1][snake_head->body.y] == 'T')
-            {
-                drills += 3;
-                snakeMovement(-1, 0);
-            }
-            else
-            {
-                snakeMovement(-1, 0);
-                if (coins > 1)
-                    snakeEatingHimself();
-            }
-        }
-        else if (!supreme_wall && drills)
-        {
+        if (!supreme_wall && (maze[snake_head->body.x - 1][snake_head->body.y] != '#' || drills))
             snakeMovement(-1, 0);
-            drills--;
-        }
         break;
     case 's':
         supreme_wall = snake_head->body.x + 1 > x - 1;
-        if (!supreme_wall && maze[snake_head->body.x + 1][snake_head->body.y] != '#')
-        {
-            if (maze[snake_head->body.x + 1][snake_head->body.y] == '$')
-            {
-                snakeMovement(+1, 0);
-                snakeAppend(create_body(), backup.x, backup.y);
-                coins++;
-            }
-            else if (maze[snake_head->body.x + 1][snake_head->body.y] == '!')
-            {
-                snakeMovement(+1, 0);
-                if (coins)
-                {
-                    head = snake_head;
-                    coins /= 2;
-                    snakeShrink();
-                }
-                penalties++;
-            }
-            else if (maze[snake_head->body.x + 1][snake_head->body.y] == 'T')
-            {
-                drills += 3;
-                snakeMovement(+1, 0);
-            }
-            else
-            {
-                snakeMovement(+1, 0);
-                if (coins > 1)
-                    snakeEatingHimself();
-            }
-        }
-        else if (!supreme_wall && drills)
-        {
+        if (!supreme_wall && (maze[snake_head->body.x + 1][snake_head->body.y] != '#' || drills))
             snakeMovement(+1, 0);
-            drills--;
-        }
         break;
     case 'e':
         supreme_wall = snake_head->body.y + 1 > y - 1;
-        if (!supreme_wall && maze[snake_head->body.x][snake_head->body.y + 1] != '#')
-        {
-            if (maze[snake_head->body.x][snake_head->body.y + 1] == '$')
-            {
-                snakeMovement(0, +1);
-                snakeAppend(create_body(), backup.x, backup.y);
-                coins++;
-            }
-            else if (maze[snake_head->body.x][snake_head->body.y + 1] == '!')
-            {
-                snakeMovement(0, +1);
-                if (coins)
-                {
-                    head = snake_head;
-                    coins /= 2;
-                    snakeShrink();
-                }
-                penalties++;
-            }
-            else if (maze[snake_head->body.x][snake_head->body.y + 1] == 'T')
-            {
-                drills += 3;
-                snakeMovement(0, +1);
-            }
-            else
-            {
-                snakeMovement(0, +1);
-                if (coins > 1)
-                    snakeEatingHimself();
-            }
-        }
-        else if (!supreme_wall && drills)
-        {
+        if (!supreme_wall && (maze[snake_head->body.x][snake_head->body.y + 1] != '#' || drills))
             snakeMovement(0, +1);
-            drills--;
-        }
         break;
     case 'o':
         supreme_wall = snake_head->body.y - 1 < 0;
-        if (!supreme_wall && maze[snake_head->body.x][snake_head->body.y - 1] != '#')
-        {
-            if (maze[snake_head->body.x][snake_head->body.y - 1] == '$')
-            {
-                snakeMovement(0, -1);
-                snakeAppend(create_body(), backup.x, backup.y);
-                coins++;
-            }
-            else if (maze[snake_head->body.x][snake_head->body.y - 1] == '!')
-            {
-                snakeMovement(0, -1);
-                if (coins)
-                {
-                    head = snake_head;
-                    coins /= 2;
-                    snakeShrink();
-                }
-                penalties++;
-            }
-            else if (maze[snake_head->body.x][snake_head->body.y - 1] == 'T')
-            {
-                drills += 3;
-                snakeMovement(0, -1);
-            }
-            else
-            {
-                snakeMovement(0, -1);
-                if (coins > 1)
-                    snakeEatingHimself();
-            }
-        }
-        else if (!supreme_wall && drills)
-        {
+        if (!supreme_wall && (maze[snake_head->body.x][snake_head->body.y - 1] != '#' || drills))
             snakeMovement(0, -1);
-            drills--;
-        }
         break;
     }
+    if (maze[snake_head->body.x][snake_head->body.y] == '#' && drills)
+        drills--;
+    else
+        check_collectable(maze);
     snakePrint(maze);
 }
 
 // Funzioni AI
+
+// Riempie il percorso
+void fill_path()
+{
+    path[steps] = automove;
+    if (path[steps - 1] == automove)
+        path = realloc(path, steps * 2 * sizeof(char));
+}
+
+// Stampa percorso
+void print_path(int size, char *path)
+{
+    for (int i = 0; i <= size; ++i)
+        printf("%c", path[i]);
+    printf("\n");
+    new_line();
+}
+
+// Operazioni di conclusione partita AI
+void finish_AI(char **maze, int x)
+{
+    freeSnake(snake_head);
+    freeMaze(maze, x);
+    printf("\nPunteggio: %d\nPercorso effettuato: ", score());
+    print_path(steps, path);
+    free(path);
+}
 
 // Trova l'entrata e l'uscita del maze dato in input dall'utente
 void find_entrance_exit(char **maze, int x, int y)
@@ -648,6 +571,7 @@ void find_entrance_exit(char **maze, int x, int y)
     drills = 0;
 
     create_snake_head();
+    path = (char *)malloc(sizeof(char));
 
     for (int row = 0; row < x; ++row)
         for (int col = 0; col < y; ++col)
@@ -673,33 +597,6 @@ void find_entrance_exit(char **maze, int x, int y)
                 ending.y = col;
             }
         }
-}
-
-// Controlla che nella cella della testa del serpente ci sia o meno un elemento raccoglibile (prima di sovrascriverlo con '.')
-void check_collectable(char **maze)
-{
-    if (maze[snake_head->body.x][snake_head->body.y] == '$')
-    {
-        snakeAppend(create_body(), backup.x, backup.y);
-        coins++;
-    }
-    else if (maze[snake_head->body.x][snake_head->body.y] == '!')
-    {
-        if (coins)
-        {
-            head = snake_head;
-            coins /= 2;
-            snakeShrink();
-        }
-        penalties++;
-    }
-    else if (maze[snake_head->body.x][snake_head->body.y] == 'T')
-        drills += 3;
-    else
-    {
-        if (coins > 1)
-            snakeEatingHimself();
-    }
 }
 
 // funzione "move" ma utilizzata nell'AI sempre a destra
@@ -806,20 +703,20 @@ void move_right_hand(char **maze, int x, int y)
         }
         break;
     }
+    fill_path();
     if (maze[snake_head->body.x][snake_head->body.y] == '#' && drills)
     {
         if (automove == 'N')
             automove = 'O';
-        if (automove == 'S')
+        else if (automove == 'S')
             automove = 'E';
-        if (automove == 'E')
+        else if (automove == 'E')
             automove = 'N';
-        if (automove == 'O')
+        else if (automove == 'O')
             automove = 'S';
         drills--;
     }
     else
         check_collectable(maze);
     maze[snake_head->body.x][snake_head->body.y] = '.';
-    steps++;
 }

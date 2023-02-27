@@ -47,5 +47,8 @@ void refresh();
 void AI_right_hand();
 void find_entrance_exit(char **maze, int x, int y);
 void move_right_hand(char **maze, int x, int y);
+void finish_AI(char **maze, int x);
+void fill_path();
+void print_path(int size, char *path);
 
 #endif

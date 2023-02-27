@@ -4,11 +4,14 @@
 #include <time.h>
 #include "settings.h"
 
-coordinates size;
-
 void AI_right_hand()
 {
     int M, N;
+    printf("Inserire in ordine i dati della matrice (input separati da una newline):\n");
+    printf("\tNumero di colonne\n");
+    printf("\tNumero di righe\n");
+    printf("\tMappa\n\n");
+    
     scanf(" %d", &M);
     scanf(" %d", &N);
     char **maze = inputFile(M, N);
@@ -17,11 +20,13 @@ void AI_right_hand()
         move_right_hand(maze, N, M);
     printf("\n");
     printMaze(maze, N, M);
-    finish(maze, N);
+    finish_AI(maze, N);
 }
 
 void interactive()
 {
+    coordinates size;
+
     size.x = 10;
     size.y = 20;
 
@@ -42,9 +47,30 @@ void interactive()
 int main()
 {
     srand(time(NULL));
+    refresh();
 
-    // interactive();
-    AI_right_hand();
+    short choice;
+
+    printf("\n\t\tMENU' DI GIOCO\n\n");
+    printf("[1]\tModalita' interattiva\n");
+    printf("[2]\tModalita' AI (sempre a destra)\n");
+    printf("\nScegli una modalita': ");
+    scanf(" %hd", &choice);
+
+    refresh();
+
+    switch (choice)
+    {
+    case 1:
+        interactive();
+        break;
+    case 2:
+        AI_right_hand();
+        break;
+    default:
+        printf("\nErrore, modalita' non presente\n");
+        break;
+    }
 
     return 0;
 }
