@@ -16,7 +16,7 @@ list_t *snake_head;
 list_t *head;
 list_t *snake_tail = NULL;
 
-char *path;
+char *path, *best_path;
 
 void refresh()
 {
@@ -459,8 +459,8 @@ void finish(char **maze, int x)
     freeMaze(maze, x);
     red();
     printf("\nHai vinto!!!\nPunteggio: %d\n", score());
-    new_line();
     resetColor();
+    new_line();
 }
 
 // Controlla che le coordinate della testa corrispondano a quelle dell'uscita
@@ -550,7 +550,6 @@ void print_path(int size, char *path)
     for (int i = 0; i <= size; ++i)
         printf("%c", path[i]);
     printf("\n");
-    new_line();
 }
 
 // Operazioni di conclusione partita AI
@@ -560,6 +559,7 @@ void finish_AI(char **maze, int x)
     freeMaze(maze, x);
     printf("\nPunteggio: %d\nPercorso effettuato: ", score());
     print_path(steps, path);
+    new_line();
     free(path);
 }
 
@@ -719,4 +719,53 @@ void move_right_hand(char **maze, int x, int y)
     else
         check_collectable(maze);
     maze[snake_head->body.x][snake_head->body.y] = '.';
+}
+
+void check_near_cells_N()
+{
+    coordinates tmp;
+    tmp.x = snake_head->body.x;
+    tmp.y = snake_head->body.y;
+    bool cell1_visited = false;
+    bool cell2_visited = false;
+    bool cell3_visited = false;
+    do
+    {
+        if (cell1_visited && cell2_visited && cell3_visited)
+        {
+            automove = 'S';
+            snakeMovement(0, +1);
+        }
+        //
+    } while (tmp.x == snake_head->body.x && tmp.y == snake_head->body.y);
+}
+
+// funzione "move" ma utilizzata nell'AI random
+void move_random(char **maze, int x, int y)
+{
+    int cell;
+
+    cell = rand() % 3 + 1;
+
+    switch (toupper(automove))
+    {
+    case 'N':
+        // check_near_cells_N
+        break;
+    case 'S':
+        // check_near_cells_S
+        break;
+    case 'E':
+        // check_near_cells_E
+        break;
+    case 'O':
+        // check_near_cells_O
+        break;
+    }
+    fill_path();
+    if (maze[snake_head->body.x][snake_head->body.y] == '#' && drills)
+        drills--;
+    else
+        check_collectable(maze);
+    maze[snake_head->body.x][snake_head->body.y] = ' ';
 }
