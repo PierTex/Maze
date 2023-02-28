@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <malloc.h>
 #include <stdbool.h>
+#include <string.h>
 #include <ctype.h>
 #include <time.h>
 #include "settings.h"
@@ -9,14 +11,11 @@ coordinates entrance, ending, backup;
 
 char direction, automove;
 int points;
-unsigned steps = 0;
+unsigned steps = 0, size = 2;
 int coins, penalties, drills;
 
 list_t *snake_head;
 list_t *head;
-list_t *snake_tail = NULL;
-
-char *path, *best_path;
 
 void refresh()
 {
@@ -126,7 +125,7 @@ void create_snake_head()
         exit(EXIT_FAILURE);
     }
     head = snake_head;
-    head->next = snake_tail;
+    head->next = NULL;
 }
 
 // Crea il nodo (pezzo del corpo del serpente) che andrà utilizzato nella funzione append
@@ -147,7 +146,7 @@ void snakeAppend(list_t *new_body, int x, int y)
     head->next = new_body;
     new_body->body.x = x;
     new_body->body.y = y;
-    new_body->next = snake_tail;
+    new_body->next = NULL;
 }
 
 // Opera su tutta la lista, muove la testa nella direzione desiderata e sovrascrive ogni nodo con la posizione del nodo precedente
@@ -170,7 +169,6 @@ void snakeMovement(int x, int y)
     }
     backup.x = last_pos.x;
     backup.y = last_pos.y;
-    steps++;
 }
 
 // Riduce la dimensione del serpente nel caso si imbatta su una penalità o su se stesso
@@ -186,7 +184,7 @@ void snakeShrink()
     } while (i <= coins);
     freeSnake(head);
     head = ptrBackup;
-    head->next = snake_tail;
+    head->next = NULL;
 }
 
 // Controlla se la posizione corrente della testa corrisponda alle coordinate di una parte del corpo, se sì allora verrà chiamata la funzione shrink altrimenti nulla
@@ -251,7 +249,7 @@ char **createMaze(int x, int y)
     for (int i = 0; i < x; i++)
         maze[i] = malloc(y * sizeof(char *));
 
-    int nWalls, pHole, ctr, ctrCol;
+    int nWalls, pHole, ctrCol;
     int lenCorridor = ((rand() % 3) + 2); // larghezza corridoio (2 o 3 spazi)
 
     // creazione entrata e uscita
@@ -419,6 +417,7 @@ char **inputFile(int M, int N)
             maze[i][j] = line[j];
     }
 
+    free(line);
     return maze;
 }
 
@@ -537,30 +536,41 @@ void move(char direction, char **maze, int x, int y)
 // Funzioni AI
 
 // Riempie il percorso
-void fill_path()
+void fill_path(char *path)
 {
+    // printf("size: %d\tsteps: %d\n", size, steps);
+    if (steps == size-1)
+    {
+        size = size * 2;
+        path = (char *)realloc(path, size);
+    }
     path[steps] = automove;
-    if (path[steps - 1] == automove)
-        path = realloc(path, steps * 2 * sizeof(char));
+    path[steps+1] = '\0';
+    // printf("p: %p\n", path);
+    printf("strlen(path): %ld\n", strlen(path));
 }
 
 // Stampa percorso
 void print_path(int size, char *path)
 {
+    // printf("p in stampa: %p\n", path);
     for (int i = 0; i <= size; ++i)
         printf("%c", path[i]);
     printf("\n");
 }
 
 // Operazioni di conclusione partita AI
-void finish_AI(char **maze, int x)
+void finish_AI(char **maze, int x, char *path)
 {
-    freeSnake(snake_head);
-    freeMaze(maze, x);
     printf("\nPunteggio: %d\nPercorso effettuato: ", score());
+    path = (char *)realloc(path, strlen(path) + 1);
+    path[steps] = '\0';
     print_path(steps, path);
+    printf("\nstrlen(path): %ld", strlen(path));
     new_line();
     free(path);
+    freeSnake(snake_head);
+    freeMaze(maze, x);
 }
 
 // Trova l'entrata e l'uscita del maze dato in input dall'utente
@@ -571,7 +581,6 @@ void find_entrance_exit(char **maze, int x, int y)
     drills = 0;
 
     create_snake_head();
-    path = (char *)malloc(sizeof(char));
 
     for (int row = 0; row < x; ++row)
         for (int col = 0; col < y; ++col)
@@ -600,9 +609,8 @@ void find_entrance_exit(char **maze, int x, int y)
 }
 
 // funzione "move" ma utilizzata nell'AI sempre a destra
-void move_right_hand(char **maze, int x, int y)
+void move_right_hand(char **maze, int x, int y, char *path)
 {
-    bool supreme_wall;
     head = snake_head;
     switch (toupper(automove))
     {
@@ -703,7 +711,8 @@ void move_right_hand(char **maze, int x, int y)
         }
         break;
     }
-    fill_path();
+    fill_path(path);
+    steps++;
     if (maze[snake_head->body.x][snake_head->body.y] == '#' && drills)
     {
         if (automove == 'N')
@@ -719,9 +728,11 @@ void move_right_hand(char **maze, int x, int y)
     else
         check_collectable(maze);
     maze[snake_head->body.x][snake_head->body.y] = '.';
+    print_path(steps, path);
+    printf("size: %d\tsteps: %d\n\n", size, steps);
 }
 
-void check_near_cells_N()
+void check_near_cells_N(char **maze, int x, int y, int *cell)
 {
     coordinates tmp;
     tmp.x = snake_head->body.x;
@@ -736,36 +747,267 @@ void check_near_cells_N()
             automove = 'S';
             snakeMovement(0, +1);
         }
-        //
+        else
+            switch (*cell)
+            {
+            case 1:
+                if (snake_head->body.y - 1 < 0 || (maze[snake_head->body.x][snake_head->body.y - 1] == '#' && !drills))
+                {
+                    cell1_visited = true;
+                    while (*cell == 1)
+                        *cell = rand() % 3 + 1;
+                }
+                else
+                {
+                    automove = 'O';
+                    snakeMovement(0, -1);
+                }
+                break;
+            case 2:
+                if (snake_head->body.x - 1 < 0 || (maze[snake_head->body.x - 1][snake_head->body.y] == '#' && !drills))
+                {
+                    cell2_visited = true;
+                    while (*cell == 2)
+                        *cell = rand() % 3 + 1;
+                }
+                else
+                {
+                    automove = 'N';
+                    snakeMovement(-1, 0);
+                }
+                break;
+            case 3:
+                if (snake_head->body.y + 1 > y - 1 || (maze[snake_head->body.x][snake_head->body.y + 1] == '#' && !drills))
+                {
+                    cell3_visited = true;
+                    while (*cell == 3)
+                        *cell = rand() % 3 + 1;
+                }
+                else
+                {
+                    automove = 'E';
+                    snakeMovement(0, +1);
+                }
+                break;
+            }
+    } while (tmp.x == snake_head->body.x && tmp.y == snake_head->body.y);
+}
+
+void check_near_cells_S(char **maze, int x, int y, int *cell)
+{
+    coordinates tmp;
+    tmp.x = snake_head->body.x;
+    tmp.y = snake_head->body.y;
+    bool cell1_visited = false;
+    bool cell2_visited = false;
+    bool cell3_visited = false;
+    do
+    {
+        if (cell1_visited && cell2_visited && cell3_visited)
+        {
+            automove = 'N';
+            snakeMovement(-1, 0);
+        }
+        else
+            switch (*cell)
+            {
+            case 1:
+                if (snake_head->body.y + 1 > y - 1 || (maze[snake_head->body.x][snake_head->body.y + 1] == '#' && !drills))
+                {
+                    cell1_visited = true;
+                    while (*cell == 1)
+                        *cell = rand() % 3 + 1;
+                }
+                else
+                {
+                    automove = 'E';
+                    snakeMovement(0, +1);
+                }
+                break;
+            case 2:
+                if (snake_head->body.x + 1 > x - 1 || (maze[snake_head->body.x + 1][snake_head->body.y] == '#' && !drills))
+                {
+                    cell2_visited = true;
+                    while (*cell == 2)
+                        *cell = rand() % 3 + 1;
+                }
+                else
+                {
+                    automove = 'S';
+                    snakeMovement(+1, 0);
+                }
+                break;
+            case 3:
+                if (snake_head->body.y - 1 < 0 || (maze[snake_head->body.x][snake_head->body.y - 1] == '#' && !drills))
+                {
+                    cell3_visited = true;
+                    while (*cell == 3)
+                        *cell = rand() % 3 + 1;
+                }
+                else
+                {
+                    automove = 'O';
+                    snakeMovement(0, -1);
+                }
+                break;
+            }
+    } while (tmp.x == snake_head->body.x && tmp.y == snake_head->body.y);
+}
+
+void check_near_cells_E(char **maze, int x, int y, int *cell)
+{
+    coordinates tmp;
+    tmp.x = snake_head->body.x;
+    tmp.y = snake_head->body.y;
+    bool cell1_visited = false;
+    bool cell2_visited = false;
+    bool cell3_visited = false;
+    do
+    {
+        if (cell1_visited && cell2_visited && cell3_visited)
+        {
+            automove = 'O';
+            snakeMovement(0, -1);
+        }
+        else
+            switch (*cell)
+            {
+            case 1:
+                if (snake_head->body.x - 1 < 0 || (maze[snake_head->body.x - 1][snake_head->body.y] == '#' && !drills))
+                {
+                    cell1_visited = true;
+                    while (*cell == 1)
+                        *cell = rand() % 3 + 1;
+                }
+                else
+                {
+                    automove = 'N';
+                    snakeMovement(-1, 0);
+                }
+                break;
+            case 2:
+                if (snake_head->body.y + 1 > y - 1 || (maze[snake_head->body.x][snake_head->body.y + 1] == '#' && !drills))
+                {
+                    cell2_visited = true;
+                    while (*cell == 2)
+                        *cell = rand() % 3 + 1;
+                }
+                else
+                {
+                    automove = 'E';
+                    snakeMovement(0, +1);
+                }
+                break;
+            case 3:
+                if (snake_head->body.x + 1 > x - 1 || (maze[snake_head->body.x + 1][snake_head->body.y] == '#' && !drills))
+                {
+                    cell3_visited = true;
+                    while (*cell == 3)
+                        *cell = rand() % 3 + 1;
+                }
+                else
+                {
+                    automove = 'S';
+                    snakeMovement(+1, 0);
+                }
+                break;
+            }
+    } while (tmp.x == snake_head->body.x && tmp.y == snake_head->body.y);
+}
+
+void check_near_cells_O(char **maze, int x, int y, int *cell)
+{
+    coordinates tmp;
+    tmp.x = snake_head->body.x;
+    tmp.y = snake_head->body.y;
+    bool cell1_visited = false;
+    bool cell2_visited = false;
+    bool cell3_visited = false;
+    do
+    {
+        if (cell1_visited && cell2_visited && cell3_visited)
+        {
+            automove = 'E';
+            snakeMovement(0, +1);
+        }
+        else
+            switch (*cell)
+            {
+            case 1:
+                if (snake_head->body.x + 1 > x - 1 || (maze[snake_head->body.x + 1][snake_head->body.y] == '#' && !drills))
+                {
+                    cell1_visited = true;
+                    while (*cell == 1)
+                        *cell = rand() % 3 + 1;
+                }
+                else
+                {
+                    automove = 'S';
+                    snakeMovement(+1, 0);
+                }
+                break;
+            case 2:
+                if (snake_head->body.y - 1 < 0 || (maze[snake_head->body.x][snake_head->body.y - 1] == '#' && !drills))
+                {
+                    cell2_visited = true;
+                    while (*cell == 2)
+                        *cell = rand() % 3 + 1;
+                }
+                else
+                {
+                    automove = 'O';
+                    snakeMovement(0, -1);
+                }
+                break;
+            case 3:
+                if (snake_head->body.x - 1 < 0 || (maze[snake_head->body.x - 1][snake_head->body.y] == '#' && !drills))
+                {
+                    cell3_visited = true;
+                    while (*cell == 3)
+                        *cell = rand() % 3 + 1;
+                }
+                else
+                {
+                    automove = 'N';
+                    snakeMovement(-1, 0);
+                }
+                break;
+            }
     } while (tmp.x == snake_head->body.x && tmp.y == snake_head->body.y);
 }
 
 // funzione "move" ma utilizzata nell'AI random
-void move_random(char **maze, int x, int y)
+void move_random(char **maze, int x, int y, char *path)
 {
     int cell;
 
     cell = rand() % 3 + 1;
-
+    snakeClear(maze);
     switch (toupper(automove))
     {
     case 'N':
-        // check_near_cells_N
+        check_near_cells_N(maze, x, y, &cell);
         break;
     case 'S':
-        // check_near_cells_S
+        check_near_cells_S(maze, x, y, &cell);
         break;
     case 'E':
-        // check_near_cells_E
+        check_near_cells_E(maze, x, y, &cell);
         break;
     case 'O':
-        // check_near_cells_O
+        check_near_cells_O(maze, x, y, &cell);
         break;
     }
-    fill_path();
+    // print_path(steps, path);
+    fill_path(path);
     if (maze[snake_head->body.x][snake_head->body.y] == '#' && drills)
         drills--;
     else
         check_collectable(maze);
-    maze[snake_head->body.x][snake_head->body.y] = ' ';
+    // maze[snake_head->body.x][snake_head->body.y] = '.';
+    snakePrint(maze);
+    printf("\n");
+    printMaze(maze, x, y);
+    print_path(steps, path);
+    printf("automove: %c\ncoins: %d\tpenalties: %d\tdrills: %d\n", automove, coins, penalties, drills);
 }
