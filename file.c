@@ -11,7 +11,7 @@ coordinates entrance, ending, backup;
 
 char direction, automove;
 int points;
-unsigned steps = 0, size = 2;
+int steps = 0, size = 2;
 int coins, penalties, drills;
 
 list_t *snake_head;
@@ -99,10 +99,10 @@ int score()
 void freeSnake(list_t *l)
 {
     list_t *tmp;
-    while (head)
+    while (l)
     {
-        tmp = head;
-        head = head->next;
+        tmp = l;
+        l = l->next;
         free(tmp);
     }
 }
@@ -110,7 +110,7 @@ void freeSnake(list_t *l)
 // Libera TUTTE le celle di memoria occupate per il maze
 void freeMaze(char **maze, int x)
 {
-    for (size_t i = 0; i < x; ++i)
+    for (int i = 0; i < x; ++i)
         free(maze[i]);
     free(maze);
 }
@@ -404,7 +404,7 @@ char **inputFile(int M, int N)
     line = malloc((M + 2) * sizeof(char *));
     maze = malloc(N * sizeof(char *));
 
-    for (size_t i = 0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
         maze[i] = malloc(M * sizeof(char *));
 
     char bin;
@@ -538,15 +538,15 @@ void move(char direction, char **maze, int x, int y)
 // Riempie il percorso
 void fill_path(char *path)
 {
-    // printf("size: %d\tsteps: %d\n", size, steps);
-    if (steps == size-1)
+    if (steps == size - 1)
     {
         size = size * 2;
-        path = (char *)realloc(path, size);
+        char *new_ptr;
+        new_ptr = (char *)realloc(path, size + 1);
+        if (new_ptr != NULL)
+            path = new_ptr;
     }
     path[steps] = automove;
-    path[steps+1] = '\0';
-    // printf("p: %p\n", path);
     printf("strlen(path): %ld\n", strlen(path));
 }
 
@@ -732,7 +732,7 @@ void move_right_hand(char **maze, int x, int y, char *path)
     printf("size: %d\tsteps: %d\n\n", size, steps);
 }
 
-void check_near_cells_N(char **maze, int x, int y, int *cell)
+void check_near_cells_N(char **maze, int y, int *cell)
 {
     coordinates tmp;
     tmp.x = snake_head->body.x;
@@ -915,7 +915,7 @@ void check_near_cells_E(char **maze, int x, int y, int *cell)
     } while (tmp.x == snake_head->body.x && tmp.y == snake_head->body.y);
 }
 
-void check_near_cells_O(char **maze, int x, int y, int *cell)
+void check_near_cells_O(char **maze, int x, int *cell)
 {
     coordinates tmp;
     tmp.x = snake_head->body.x;
@@ -986,7 +986,7 @@ void move_random(char **maze, int x, int y, char *path)
     switch (toupper(automove))
     {
     case 'N':
-        check_near_cells_N(maze, x, y, &cell);
+        check_near_cells_N(maze, y, &cell);
         break;
     case 'S':
         check_near_cells_S(maze, x, y, &cell);
@@ -995,7 +995,7 @@ void move_random(char **maze, int x, int y, char *path)
         check_near_cells_E(maze, x, y, &cell);
         break;
     case 'O':
-        check_near_cells_O(maze, x, y, &cell);
+        check_near_cells_O(maze, x, &cell);
         break;
     }
     // print_path(steps, path);

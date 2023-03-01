@@ -10,7 +10,7 @@ void AI_right_hand()
 {
     int M, N;
 
-    char *path = (char *)malloc(2 * sizeof(char));
+    char *path = (char *)malloc(2*sizeof(char));
 
     printf("Inserire in ordine i dati della matrice (input separati da una newline):\n");
     printf("- Numero di colonne\n");
@@ -23,7 +23,10 @@ void AI_right_hand()
     char **maze = inputFile(M, N);
     find_entrance_exit(maze, N, M);
     while (!checkFinish())
+    {
+        printf("p path: %p\n", path);
         move_right_hand(maze, N, M, path);
+    }
     printf("\n");
     printMaze(maze, N, M);
     finish_AI(maze, N, path);
@@ -32,7 +35,7 @@ void AI_right_hand()
 void AI_random()
 {
     int M, N;
-    char *path = (char *)malloc(sizeof(char));
+    char *path = (char *)malloc(sizeof(char) + 1);
 
     printf("Inserire in ordine i dati della matrice (input separati da una newline):\n");
     printf("- Numero di colonne\n");
