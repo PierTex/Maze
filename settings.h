@@ -18,6 +18,13 @@ typedef struct Node
     struct Node *next;
 } list_t;
 
+typedef struct
+{
+    char *moves;
+    size_t capacity;
+    size_t size;
+} path_t;
+
 // COLORS
 
 void resetColor();
@@ -45,11 +52,12 @@ void snakeShrink();
 void refresh();
 
 void AI_right_hand();
+void init_path(path_t *path);
 void find_entrance_exit(char **maze, int x, int y);
-void move_right_hand(char **maze, int x, int y, char *path);
-void move_random(char **maze, int x, int y, char *path);
-void finish_AI(char **maze, int x, char *path);
-void fill_path(char *path);
-void print_path(int size, char *path);
+void move_right_hand(char **maze, int x, int y, path_t *path);
+void move_random(char **maze, int x, int y, path_t *path);
+void finish_AI(char **maze, int x, path_t *path);
+void add_move(path_t *path);
+void print_path(path_t *path);
 
 #endif

@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
@@ -10,7 +9,7 @@ void AI_right_hand()
 {
     int M, N;
 
-    char *path = (char *)malloc(2*sizeof(char));
+    path_t path;
 
     printf("Inserire in ordine i dati della matrice (input separati da una newline):\n");
     printf("- Numero di colonne\n");
@@ -21,21 +20,21 @@ void AI_right_hand()
     scanf(" %d", &N);
 
     char **maze = inputFile(M, N);
+    init_path(&path);
     find_entrance_exit(maze, N, M);
     while (!checkFinish())
     {
-        printf("p path: %p\n", path);
-        move_right_hand(maze, N, M, path);
+        move_right_hand(maze, N, M, &path);
     }
     printf("\n");
     printMaze(maze, N, M);
-    finish_AI(maze, N, path);
+    finish_AI(maze, N, &path);
 }
 
 void AI_random()
 {
     int M, N;
-    char *path = (char *)malloc(sizeof(char) + 1);
+    path_t path;
 
     printf("Inserire in ordine i dati della matrice (input separati da una newline):\n");
     printf("- Numero di colonne\n");
@@ -45,11 +44,12 @@ void AI_random()
     scanf(" %d", &M);
     scanf(" %d", &N);
 
+    init_path(&path);
     char **maze = inputFile(M, N);
     find_entrance_exit(maze, N, M);
     while (!checkFinish())
-        move_random(maze, N, M, path);
-    finish_AI(maze, N, path);
+        move_random(maze, N, M, &path);
+    finish_AI(maze, N, &path);
 }
 
 void interactive()

@@ -7,11 +7,21 @@
 #include <time.h>
 #include "settings.h"
 
-coordinates entrance, ending, backup;
+#define INIT_CAPACITY 10
+#define GROWTH_FACTOR 2
+
+typedef struct
+{
+    bool cell_1;
+    bool cell_2;
+    bool cell_3;
+} neighbors_t;
+
+coordinates entrance,
+    ending, backup;
 
 char direction, automove;
-int points;
-int steps = 0, size = 2;
+unsigned steps = 0;
 int coins, penalties, drills;
 
 list_t *snake_head;
@@ -89,7 +99,7 @@ void white()
 }
 
 // Calcolo punteggio finale
-int score()
+int score(size_t steps)
 {
     int max = 1000;
     return max + coins * 10 - steps;
@@ -457,7 +467,7 @@ void finish(char **maze, int x)
     freeSnake(snake_head);
     freeMaze(maze, x);
     red();
-    printf("\nHai vinto!!!\nPunteggio: %d\n", score());
+    printf("\nHai vinto!!!\nPunteggio: %d\n", score(steps));
     resetColor();
     new_line();
 }
@@ -535,40 +545,53 @@ void move(char direction, char **maze, int x, int y)
 
 // Funzioni AI
 
-// Riempie il percorso
-void fill_path(char *path)
+void free_path(path_t *path)
 {
-    if (steps == size - 1)
+    free(path->moves);
+    path->capacity = 0;
+    path->size = 0;
+}
+
+void init_path(path_t *path)
+{
+    path->moves = (char *)malloc(INIT_CAPACITY * sizeof(char) + 1);
+    path->capacity = INIT_CAPACITY;
+    path->size = 0;
+}
+
+// Riempie il percorso
+void add_move(path_t *path)
+{
+    if (path->size == path->capacity)
     {
-        size = size * 2;
-        char *new_ptr;
-        new_ptr = (char *)realloc(path, size + 1);
-        if (new_ptr != NULL)
-            path = new_ptr;
+        path->capacity *= GROWTH_FACTOR;
+        char *new_ptr = (char *)realloc(path->moves, path->capacity * sizeof(char) + 1);
+        if (!new_ptr)
+        {
+            free(path->moves);
+            exit(EXIT_FAILURE);
+        }
+        path->moves = new_ptr;
     }
-    path[steps] = automove;
-    printf("strlen(path): %ld\n", strlen(path));
+    path->moves[path->size++] = automove;
 }
 
 // Stampa percorso
-void print_path(int size, char *path)
+void print_path(path_t *path)
 {
-    // printf("p in stampa: %p\n", path);
-    for (int i = 0; i <= size; ++i)
-        printf("%c", path[i]);
+    for (size_t i = 0; i < path->size; i++)
+        printf("%c", path->moves[i]);
     printf("\n");
 }
 
 // Operazioni di conclusione partita AI
-void finish_AI(char **maze, int x, char *path)
+void finish_AI(char **maze, int x, path_t *path)
 {
-    printf("\nPunteggio: %d\nPercorso effettuato: ", score());
-    path = (char *)realloc(path, strlen(path) + 1);
-    path[steps] = '\0';
-    print_path(steps, path);
-    printf("\nstrlen(path): %ld", strlen(path));
+    printf("\nPunteggio: %d\nPercorso effettuato: ", score(path->size));
+    path->moves[path->size] = '\0';
+    print_path(path);
     new_line();
-    free(path);
+    free_path(path);
     freeSnake(snake_head);
     freeMaze(maze, x);
 }
@@ -609,7 +632,7 @@ void find_entrance_exit(char **maze, int x, int y)
 }
 
 // funzione "move" ma utilizzata nell'AI sempre a destra
-void move_right_hand(char **maze, int x, int y, char *path)
+void move_right_hand(char **maze, int x, int y, path_t *path)
 {
     head = snake_head;
     switch (toupper(automove))
@@ -711,8 +734,7 @@ void move_right_hand(char **maze, int x, int y, char *path)
         }
         break;
     }
-    fill_path(path);
-    steps++;
+    add_move(path);
     if (maze[snake_head->body.x][snake_head->body.y] == '#' && drills)
     {
         if (automove == 'N')
@@ -728,8 +750,6 @@ void move_right_hand(char **maze, int x, int y, char *path)
     else
         check_collectable(maze);
     maze[snake_head->body.x][snake_head->body.y] = '.';
-    print_path(steps, path);
-    printf("size: %d\tsteps: %d\n\n", size, steps);
 }
 
 void check_near_cells_N(char **maze, int y, int *cell)
@@ -737,9 +757,6 @@ void check_near_cells_N(char **maze, int y, int *cell)
     coordinates tmp;
     tmp.x = snake_head->body.x;
     tmp.y = snake_head->body.y;
-    bool cell1_visited = false;
-    bool cell2_visited = false;
-    bool cell3_visited = false;
     do
     {
         if (cell1_visited && cell2_visited && cell3_visited)
@@ -977,29 +994,32 @@ void check_near_cells_O(char **maze, int x, int *cell)
 }
 
 // funzione "move" ma utilizzata nell'AI random
-void move_random(char **maze, int x, int y, char *path)
+void move_random(char **maze, int x, int y, path_t *path)
 {
-    int cell;
-
-    cell = rand() % 3 + 1;
+    int odds;
+    neighbors_t cells;
+    cells.cell_1 = false;
+    cells.cell_2 = false;
+    cells.cell_3 = false;
+    odds = rand() % 3 + 1;
     snakeClear(maze);
     switch (toupper(automove))
     {
     case 'N':
-        check_near_cells_N(maze, y, &cell);
+        check_near_cells_N(maze, y, &odds);
         break;
     case 'S':
-        check_near_cells_S(maze, x, y, &cell);
+        check_near_cells_S(maze, x, y, &odds);
         break;
     case 'E':
-        check_near_cells_E(maze, x, y, &cell);
+        check_near_cells_E(maze, x, y, &odds);
         break;
     case 'O':
-        check_near_cells_O(maze, x, &cell);
+        check_near_cells_O(maze, x, &odds);
         break;
     }
     // print_path(steps, path);
-    fill_path(path);
+    add_move(path);
     if (maze[snake_head->body.x][snake_head->body.y] == '#' && drills)
         drills--;
     else
@@ -1008,6 +1028,6 @@ void move_random(char **maze, int x, int y, char *path)
     snakePrint(maze);
     printf("\n");
     printMaze(maze, x, y);
-    print_path(steps, path);
+    print_path(path);
     printf("automove: %c\ncoins: %d\tpenalties: %d\tdrills: %d\n", automove, coins, penalties, drills);
 }
