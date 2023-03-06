@@ -8,7 +8,6 @@
 void AI_right_hand()
 {
     int M, N;
-
     path_t path;
 
     printf("Inserire in ordine i dati della matrice (input separati da una newline):\n");
@@ -19,13 +18,11 @@ void AI_right_hand()
     scanf(" %d", &M);
     scanf(" %d", &N);
 
-    char **maze = inputFile(M, N);
     init_path(&path);
+    char **maze = inputFile(M, N);
     find_entrance_exit(maze, N, M);
     while (!checkFinish())
-    {
         move_right_hand(maze, N, M, &path);
-    }
     printf("\n");
     printMaze(maze, N, M);
     finish_AI(maze, N, &path);
@@ -34,7 +31,7 @@ void AI_right_hand()
 void AI_random()
 {
     int M, N;
-    path_t path;
+    path_t path, best_path;
 
     printf("Inserire in ordine i dati della matrice (input separati da una newline):\n");
     printf("- Numero di colonne\n");
@@ -44,11 +41,17 @@ void AI_random()
     scanf(" %d", &M);
     scanf(" %d", &N);
 
-    init_path(&path);
+    //init_path(&best_path);
     char **maze = inputFile(M, N);
     find_entrance_exit(maze, N, M);
-    while (!checkFinish())
-        move_random(maze, N, M, &path);
+    //for (size_t i = 0; i < 100; ++i)
+    //{
+        init_path(&path);
+        while (!checkFinish())
+            move_random(maze, N, M, &path);
+    //}
+    printf("\n");
+    printMaze(maze, N, M);
     finish_AI(maze, N, &path);
 }
 
