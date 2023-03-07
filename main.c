@@ -31,7 +31,10 @@ void AI_right_hand()
 void AI_random()
 {
     int M, N;
+    int best_score;
+    size_t n_iterations = 1000;
     path_t path, best_path;
+    score_t ratio;
 
     printf("Inserire in ordine i dati della matrice (input separati da una newline):\n");
     printf("- Numero di colonne\n");
@@ -41,18 +44,44 @@ void AI_random()
     scanf(" %d", &M);
     scanf(" %d", &N);
 
-    //init_path(&best_path);
+    init_path(&best_path);
     char **maze = inputFile(M, N);
-    find_entrance_exit(maze, N, M);
-    //for (size_t i = 0; i < 100; ++i)
-    //{
+
+    char **maze_copy = malloc(N * sizeof(char *));
+    for (int i = 0; i < N; ++i)
+        maze_copy[i] = malloc(M * sizeof(char *));
+    maze_copy = copy_matrix(N, M, maze_copy, maze);
+
+    for (size_t i = 0; i < n_iterations; ++i)
+    {
+        find_entrance_exit(maze, N, M);
         init_path(&path);
         while (!checkFinish())
             move_random(maze, N, M, &path);
-    //}
+        ratio.current = score(path.size) / path.size;
+        if (i == 0 || (score(path.size) >= best_score && ratio.current > ratio.best))
+        {
+            best_score = score(path.size);
+            ratio.best = best_score / path.size;
+
+            best_path.size = path.size;
+
+            char *new_ptr = (char *)realloc(best_path.moves, best_path.size * sizeof(char) + 1);
+            if (!new_ptr)
+            {
+                free(best_path.moves);
+                exit(EXIT_FAILURE);
+            }
+            best_path.moves = new_ptr;
+            memcpy(best_path.moves, path.moves, path.size * sizeof(char));
+        }
+        if (i < n_iterations - 1)
+            maze = copy_matrix(N, M, maze, maze_copy);
+        free_path(&path);
+    }
     printf("\n");
-    printMaze(maze, N, M);
-    finish_AI(maze, N, &path);
+    freeMaze(maze_copy, N);
+    finish_AI(maze, N, &best_path);
 }
 
 void interactive()
@@ -79,7 +108,7 @@ void interactive()
 int main()
 {
     srand(time(NULL));
-    // refresh();
+    //refresh();
 
     short choice;
 
@@ -90,7 +119,7 @@ int main()
     printf("\nScegli una modalita': ");
     scanf(" %hd", &choice);
 
-    // refresh();
+    //refresh();
 
     switch (choice)
     {
@@ -110,3 +139,20 @@ int main()
 
     return 0;
 }
+
+/*
+
+19
+10
+###################
+o    #          $ #
+#    #          $ #
+#    #   ! #    $ #
+#    #     #    $ #
+#    #     #      _
+#    #     #      #
+#          #      #
+#    $$$$  #      #
+###################
+
+*/

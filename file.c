@@ -24,7 +24,7 @@ char direction, automove;
 unsigned steps = 0;
 int coins, penalties, drills;
 
-list_t *snake_head;
+list_t *snake_head = NULL;
 list_t *head;
 
 void refresh()
@@ -394,6 +394,17 @@ char **createMaze(int x, int y)
     return maze;
 }
 
+char **copy_matrix(int x, int y, char **maze_to, char **maze_from)
+{
+    for (int i = 0; i < x; ++i)
+        for (int j = 0; j < y; ++j)
+            maze_to[i][j] = maze_from[i][j];
+
+    freeSnake(snake_head);
+
+    return maze_to;
+}
+
 // Stampa su schermo del labirinito
 void printMaze(char **maze, int x, int y)
 {
@@ -554,6 +565,9 @@ void free_path(path_t *path)
 
 void init_path(path_t *path)
 {
+    coins = 0;
+    penalties = 0;
+    drills = 0;
     path->moves = (char *)malloc(INIT_CAPACITY * sizeof(char) + 1);
     path->capacity = INIT_CAPACITY;
     path->size = 0;

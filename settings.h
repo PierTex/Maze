@@ -25,6 +25,12 @@ typedef struct
     size_t size;
 } path_t;
 
+typedef struct
+{
+    int current;
+    int best;
+} score_t;
+
 // COLORS
 
 void resetColor();
@@ -38,6 +44,8 @@ void cyan();
 void white();
 
 char **createMaze(int x, int y);
+char **copy_matrix(int x, int y, char **maze_to, char **maze_from);
+//char **copy_matrix_and_freeSnake(int x, int y, char **maze_to, char **maze_from);
 char **inputFile(int M, int N);
 void printMaze(char **maze, int x, int y);
 bool checkDigitDirection(char direction);
@@ -46,10 +54,13 @@ bool checkFinish();
 void move(char direction, char **maze, int x, int y);
 void finish(char **maze, int x);
 int checkPoints();
+int score(size_t steps);
 void printPoints(int points);
 void snakeAppend(list_t *new_body, int x, int y);
 void snakeShrink();
 void refresh();
+void freeMaze(char **maze, int x);
+void freeSnake(list_t *l);
 
 void AI_right_hand();
 void init_path(path_t *path);
@@ -59,5 +70,6 @@ void move_random(char **maze, int x, int y, path_t *path);
 void finish_AI(char **maze, int x, path_t *path);
 void add_move(path_t *path);
 void print_path(path_t *path);
+void free_path(path_t *path);
 
 #endif
