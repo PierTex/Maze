@@ -18,6 +18,8 @@ void AI_right_hand()
     scanf(" %d", &M);
     scanf(" %d", &N);
 
+    refresh();
+
     init_path(&path);
     char **maze = inputFile(M, N);
     find_entrance_exit(maze, N, M);
@@ -32,7 +34,7 @@ void AI_random()
 {
     int M, N;
     int best_score;
-    size_t n_iterations = 1000;
+    size_t n_iterations = 5000;
     path_t path, best_path;
     score_t ratio;
 
@@ -46,6 +48,8 @@ void AI_random()
 
     init_path(&best_path);
     char **maze = inputFile(M, N);
+
+    refresh();
 
     char **maze_copy = malloc(N * sizeof(char *));
     for (int i = 0; i < N; ++i)
@@ -80,6 +84,9 @@ void AI_random()
         free_path(&path);
     }
     printf("\n");
+    maze = copy_matrix(N, M, maze, maze_copy);
+    mark_path(&best_path, maze);
+    printMaze(maze, N, M);
     freeMaze(maze_copy, N);
     finish_AI(maze, N, &best_path);
 }
@@ -108,7 +115,7 @@ void interactive()
 int main()
 {
     srand(time(NULL));
-    //refresh();
+    refresh();
 
     short choice;
 
@@ -119,7 +126,7 @@ int main()
     printf("\nScegli una modalita': ");
     scanf(" %hd", &choice);
 
-    //refresh();
+    refresh();
 
     switch (choice)
     {

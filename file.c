@@ -401,6 +401,7 @@ char **copy_matrix(int x, int y, char **maze_to, char **maze_from)
             maze_to[i][j] = maze_from[i][j];
 
     freeSnake(snake_head);
+    snake_head = NULL;
 
     return maze_to;
 }
@@ -1031,4 +1032,30 @@ void move_random(char **maze, int x, int y, path_t *path)
         check_collectable(maze);
     maze[snake_head->body.x][snake_head->body.y] = '.';
     snakePrint(maze);
+}
+
+void mark_path(path_t *path, char **maze)
+{
+    int row = entrance.x, col = entrance.y;
+    maze[row][col] = '.';                   
+
+    for (size_t i = 0; i < path->size; i++)
+    {
+        switch (path->moves[i])
+        {
+        case 'N':
+            row--;
+            break;
+        case 'S':
+            row++;
+            break;
+        case 'E':
+            col++;
+            break;
+        case 'O':
+            col--;
+            break;
+        }
+        maze[row][col] = '.';
+    }
 }

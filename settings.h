@@ -70,6 +70,7 @@ void move_random(char **maze, int x, int y, path_t *path);
 void finish_AI(char **maze, int x, path_t *path);
 void add_move(path_t *path);
 void print_path(path_t *path);
+void mark_path(path_t *path, char **maze);
 void free_path(path_t *path);
 
 #endif
