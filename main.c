@@ -34,7 +34,7 @@ void AI_random()
 {
     int M, N;
     int best_score;
-    size_t n_iterations = 5000;
+    size_t n_iterations = 10000;
     path_t path, best_path;
     score_t ratio;
 
@@ -42,13 +42,11 @@ void AI_random()
     printf("- Numero di colonne\n");
     printf("- Numero di righe\n");
     printf("- Mappa\n\n");
-
     scanf(" %d", &M);
     scanf(" %d", &N);
 
     init_path(&best_path);
     char **maze = inputFile(M, N);
-
     refresh();
 
     char **maze_copy = malloc(N * sizeof(char *));
@@ -62,29 +60,28 @@ void AI_random()
         init_path(&path);
         while (!checkFinish())
             move_random(maze, N, M, &path);
-        ratio.current = score(path.size) / path.size;
-        if (i == 0 || (score(path.size) >= best_score && ratio.current > ratio.best))
+        if (score(path.size) >= 0)
         {
-            best_score = score(path.size);
-            ratio.best = best_score / path.size;
-
-            best_path.size = path.size;
-
-            char *new_ptr = (char *)realloc(best_path.moves, best_path.size * sizeof(char) + 1);
-            if (!new_ptr)
+            ratio.current = score(path.size) / path.size;
+            if (i == 0 || (score(path.size) >= best_score && ratio.current > ratio.best))
             {
-                free(best_path.moves);
-                exit(EXIT_FAILURE);
+                best_score = score(path.size);
+                ratio.best = best_score / path.size;
+                best_path.size = path.size;
+                char *new_ptr = (char *)realloc(best_path.moves, best_path.size * sizeof(char) + 1);
+                if (!new_ptr)
+                {
+                    free(best_path.moves);
+                    exit(EXIT_FAILURE);
+                }
+                best_path.moves = new_ptr;
+                memcpy(best_path.moves, path.moves, path.size * sizeof(char));
             }
-            best_path.moves = new_ptr;
-            memcpy(best_path.moves, path.moves, path.size * sizeof(char));
         }
-        if (i < n_iterations - 1)
-            maze = copy_matrix(N, M, maze, maze_copy);
+        maze = copy_matrix(N, M, maze, maze_copy);
         free_path(&path);
     }
     printf("\n");
-    maze = copy_matrix(N, M, maze, maze_copy);
     mark_path(&best_path, maze);
     printMaze(maze, N, M);
     freeMaze(maze_copy, N);
