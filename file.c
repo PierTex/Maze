@@ -9,6 +9,15 @@
 #define INIT_CAPACITY 10
 #define GROWTH_FACTOR 2
 
+#define ANSI_COLOR_WHITE "\x1B[37m" //
+#define ANSI_COLOR_RED "\x1B[31m"
+#define ANSI_COLOR_GREEN "\x1B[32m"
+#define ANSI_COLOR_YELLOW "\x1B[33m"
+#define ANSI_COLOR_BLUE "\x1B[34m"
+#define ANSI_COLOR_MAGENTA "\x1B[35m"
+#define ANSI_COLOR_CYAN "\x1B[36m" //
+#define ANSI_COLOR_RESET "\x1B[0m" //
+
 coordinates_t entrance, ending, backup;
 
 char direction, automove;
@@ -342,10 +351,23 @@ char **copy_matrix(int x, int y, char **maze_to, char **maze_from)
 
 void printMaze(char **maze, int x, int y)
 {
+    char elem;
     for (int i = 0; i < x; i++)
     {
         for (int j = 0; j < y; j++)
-            printf("%c", maze[i][j]);
+        {
+            elem = maze[i][j];
+            if (elem == '#')
+                printf(ANSI_COLOR_CYAN "%c" ANSI_COLOR_RESET, elem);
+            else if (elem == '$')
+                printf(ANSI_COLOR_YELLOW "%c" ANSI_COLOR_RESET, elem);
+            else if (elem == '!')
+                printf(ANSI_COLOR_RED "%c" ANSI_COLOR_RESET, elem);
+            else if (elem == 'T')
+                printf(ANSI_COLOR_GREEN "%c" ANSI_COLOR_RESET, elem);
+            else
+                printf("%c", elem);
+        }
         printf("\n");
     }
 }
