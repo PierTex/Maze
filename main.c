@@ -14,18 +14,18 @@ void AI_right_hand()
     printf("- Numero di colonne\n");
     printf("- Numero di righe\n");
     printf("- Mappa\n\n");
-
     scanf(" %d", &M);
     scanf(" %d", &N);
 
-    refresh();
-
     init_path(&path);
     char **maze = inputFile(M, N);
+    refresh();
+
     find_entrance_exit(maze, N, M);
     while (!checkFinish())
         move_right_hand(maze, N, M, &path);
     printf("\n");
+    mark_path(&path, maze);
     printMaze(maze, N, M);
     finish_AI(maze, N, &path);
 }
@@ -116,7 +116,7 @@ int main()
 
     short choice;
 
-    printf("\n\t\tMENU' DI GIOCO\n\n");
+    printf("\n\tMENU' DI GIOCO\n\n");
     printf("[1]\tModalita' Interattiva\n");
     printf("[2]\tModalita' AI Sempre a Destra\n");
     printf("[3]\tModalita' AI Random\n");
