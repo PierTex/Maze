@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
@@ -10,15 +9,7 @@
 #define INIT_CAPACITY 10
 #define GROWTH_FACTOR 2
 
-typedef struct
-{
-    bool cell_1;
-    bool cell_2;
-    bool cell_3;
-} neighbors_t;
-
-coordinates entrance,
-    ending, backup;
+coordinates entrance, ending, backup;
 
 char direction, automove;
 unsigned steps = 0;
@@ -53,59 +44,12 @@ void new_line()
 #endif
 }
 
-void resetColor()
-{
-    printf("\033[0m");
-}
-
-void black()
-{
-    printf("\033[0:30m");
-}
-
-void red()
-{
-    printf("\033[0:31m");
-}
-
-void green()
-{
-    printf("\033[0:32m");
-}
-
-void yellow()
-{
-    printf("\033[0:33m");
-}
-
-void blue()
-{
-    printf("\033[0:34m");
-}
-
-void purple()
-{
-    printf("\033[0:35m");
-}
-
-void cyan()
-{
-    printf("\033[0:36m");
-}
-
-void white()
-{
-    printf("\033[0:37m");
-}
-
-// Calcolo punteggio finale
 int score(size_t steps)
 {
     int max = 1000;
     return max + coins * 10 - steps;
 }
 
-// Libera le celle di memoria dall'allocazione iniziale (a partire dal nodo dato come parametro)
 void freeSnake(list_t *l)
 {
     list_t *tmp;
@@ -117,7 +61,6 @@ void freeSnake(list_t *l)
     }
 }
 
-// Libera TUTTE le celle di memoria occupate per il maze
 void freeMaze(char **maze, int x)
 {
     for (int i = 0; i < x; ++i)
@@ -125,7 +68,6 @@ void freeMaze(char **maze, int x)
     free(maze);
 }
 
-// Crea la testa iniziale del serpente
 void create_snake_head()
 {
     snake_head = (list_t *)malloc(sizeof(list_t));
@@ -138,7 +80,6 @@ void create_snake_head()
     head->next = NULL;
 }
 
-// Crea il nodo (pezzo del corpo del serpente) che andrà utilizzato nella funzione append
 list_t *create_body()
 {
     list_t *new_body = (list_t *)malloc(sizeof(list_t));
@@ -150,7 +91,6 @@ list_t *create_body()
     return new_body;
 }
 
-// Accoda il nodo creato sopra nel caso ci si imbatta nella moneta
 void snakeAppend(list_t *new_body, int x, int y)
 {
     head->next = new_body;
@@ -159,7 +99,6 @@ void snakeAppend(list_t *new_body, int x, int y)
     new_body->next = NULL;
 }
 
-// Opera su tutta la lista, muove la testa nella direzione desiderata e sovrascrive ogni nodo con la posizione del nodo precedente
 void snakeMovement(int x, int y)
 {
     coordinates last_pos, current_pos;
@@ -181,7 +120,6 @@ void snakeMovement(int x, int y)
     backup.y = last_pos.y;
 }
 
-// Riduce la dimensione del serpente nel caso si imbatta su una penalità o su se stesso
 void snakeShrink()
 {
     int i = 0;
@@ -197,7 +135,6 @@ void snakeShrink()
     head->next = NULL;
 }
 
-// Controlla se la posizione corrente della testa corrisponda alle coordinate di una parte del corpo, se sì allora verrà chiamata la funzione shrink altrimenti nulla
 void snakeEatingHimself()
 {
     int i = 0;
@@ -221,7 +158,6 @@ void snakeEatingHimself()
         snakeShrink();
 }
 
-// Sovrascrive i caratteri del maze togliendo il serpente (per poi stampare quello con le posizioni modificate tramite snakePrint)
 void snakeClear(char **maze)
 {
     head = snake_head;
@@ -233,7 +169,6 @@ void snakeClear(char **maze)
     head = snake_head;
 }
 
-// Stampa il serpente con le posizioni modificate
 void snakePrint(char **maze)
 {
     head = snake_head;
@@ -247,7 +182,6 @@ void snakePrint(char **maze)
     head = snake_head;
 }
 
-// Crea il labirinto di dimensioni x e y con entrata, uscita e corridoi completamente random
 char **createMaze(int x, int y)
 {
     coins = 10;
@@ -406,7 +340,6 @@ char **copy_matrix(int x, int y, char **maze_to, char **maze_from)
     return maze_to;
 }
 
-// Stampa su schermo del labirinito
 void printMaze(char **maze, int x, int y)
 {
     for (int i = 0; i < x; i++)
@@ -417,7 +350,6 @@ void printMaze(char **maze, int x, int y)
     }
 }
 
-// Funzione per immettere il labirinto scelto dall'utente
 char **inputFile(int M, int N)
 {
     char *line;
@@ -443,7 +375,6 @@ char **inputFile(int M, int N)
     return maze;
 }
 
-// La mossa presa in input è accettabile?
 bool checkDigitDirection(char direction)
 {
     if (tolower(direction) == 'n' ||
@@ -454,7 +385,6 @@ bool checkDigitDirection(char direction)
     return false;
 }
 
-// Inserimento della mossa e output dei raccoglibili presi fino a quel momento
 char insertMove()
 {
     char direction;
@@ -473,18 +403,14 @@ char insertMove()
     return direction;
 }
 
-// Operazioni di conclusione partita
 void finish(char **maze, int x)
 {
     freeSnake(snake_head);
     freeMaze(maze, x);
-    red();
     printf("\nHai vinto!!!\nPunteggio: %d\n", score(steps));
-    resetColor();
     new_line();
 }
 
-// Controlla che le coordinate della testa corrispondano a quelle dell'uscita
 bool checkFinish()
 {
     if (head->body.x == ending.x && head->body.y == ending.y)
@@ -492,7 +418,6 @@ bool checkFinish()
     return false;
 }
 
-// Controlla che nella cella della testa del serpente ci sia o meno un elemento raccoglibile (prima di sovrascriverlo con '.' nel caso AI sempre a destra)
 void check_collectable(char **maze)
 {
     if (maze[snake_head->body.x][snake_head->body.y] == '$')
@@ -519,7 +444,6 @@ void check_collectable(char **maze)
     }
 }
 
-// Operazioni per i controlli e l'eventuale movimento del serpente
 void move(char direction, char **maze, int x, int y)
 {
     bool supreme_wall;
@@ -574,7 +498,6 @@ void init_path(path_t *path)
     path->size = 0;
 }
 
-// Riempie il percorso
 void add_move(path_t *path)
 {
     if (path->size == path->capacity)
@@ -591,7 +514,6 @@ void add_move(path_t *path)
     path->moves[path->size++] = automove;
 }
 
-// Stampa percorso
 void print_path(path_t *path)
 {
     for (size_t i = 0; i < path->size; i++)
@@ -599,7 +521,6 @@ void print_path(path_t *path)
     printf("\n");
 }
 
-// Operazioni di conclusione partita AI
 void finish_AI(char **maze, int x, path_t *path)
 {
     printf("\nPunteggio: %d\nPercorso effettuato: ", score(path->size));
@@ -611,7 +532,6 @@ void finish_AI(char **maze, int x, path_t *path)
     freeMaze(maze, x);
 }
 
-// Trova l'entrata e l'uscita del maze dato in input dall'utente
 void find_entrance_exit(char **maze, int x, int y)
 {
     coins = 0;
@@ -646,7 +566,6 @@ void find_entrance_exit(char **maze, int x, int y)
         }
 }
 
-// funzione "move" ma utilizzata nell'AI sempre a destra
 void move_right_hand(char **maze, int x, int y, path_t *path)
 {
     head = snake_head;
@@ -999,7 +918,6 @@ void check_near_cells_O(char **maze, int x, int *cell, neighbors_t cells)
     } while (tmp.x == snake_head->body.x && tmp.y == snake_head->body.y);
 }
 
-// funzione "move" ma utilizzata nell'AI random
 void move_random(char **maze, int x, int y, path_t *path)
 {
     int odds;
@@ -1037,7 +955,7 @@ void move_random(char **maze, int x, int y, path_t *path)
 void mark_path(path_t *path, char **maze)
 {
     int row = entrance.x, col = entrance.y;
-    maze[row][col] = '.';                   
+    maze[row][col] = '.';
 
     for (size_t i = 0; i < path->size; i++)
     {
