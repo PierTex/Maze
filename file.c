@@ -9,7 +9,7 @@
 #define INIT_CAPACITY 10
 #define GROWTH_FACTOR 2
 
-coordinates entrance, ending, backup;
+coordinates_t entrance, ending, backup;
 
 char direction, automove;
 unsigned steps = 0;
@@ -101,7 +101,7 @@ void snakeAppend(list_t *new_body, int x, int y)
 
 void snakeMovement(int x, int y)
 {
-    coordinates last_pos, current_pos;
+    coordinates_t last_pos, current_pos;
     last_pos.x = head->body.x;
     last_pos.y = head->body.y;
     head->body.x += x;
@@ -286,7 +286,7 @@ char **createMaze(int x, int y)
     }
 
     // generazione monete, penalita' e trapani
-    coordinates coin, penalty, drill;
+    coordinates_t coin, penalty, drill;
     bool isAvailableCoin, isAvailablePenalty, isAvailableDrill; // controllo cella
     while (coins || penalties || drills)
     {
@@ -688,7 +688,7 @@ void move_right_hand(char **maze, int x, int y, path_t *path)
 
 void check_near_cells_N(char **maze, int y, int *cell, neighbors_t cells)
 {
-    coordinates tmp;
+    coordinates_t tmp;
     tmp.x = snake_head->body.x;
     tmp.y = snake_head->body.y;
     do
@@ -746,7 +746,7 @@ void check_near_cells_N(char **maze, int y, int *cell, neighbors_t cells)
 
 void check_near_cells_S(char **maze, int x, int y, int *cell, neighbors_t cells)
 {
-    coordinates tmp;
+    coordinates_t tmp;
     tmp.x = snake_head->body.x;
     tmp.y = snake_head->body.y;
     do
@@ -804,7 +804,7 @@ void check_near_cells_S(char **maze, int x, int y, int *cell, neighbors_t cells)
 
 void check_near_cells_E(char **maze, int x, int y, int *cell, neighbors_t cells)
 {
-    coordinates tmp;
+    coordinates_t tmp;
     tmp.x = snake_head->body.x;
     tmp.y = snake_head->body.y;
     do
@@ -862,7 +862,7 @@ void check_near_cells_E(char **maze, int x, int y, int *cell, neighbors_t cells)
 
 void check_near_cells_O(char **maze, int x, int *cell, neighbors_t cells)
 {
-    coordinates tmp;
+    coordinates_t tmp;
     tmp.x = snake_head->body.x;
     tmp.y = snake_head->body.y;
     do
@@ -942,7 +942,6 @@ void move_random(char **maze, int x, int y, path_t *path)
         check_near_cells_O(maze, x, &odds, cells);
         break;
     }
-    // print_path(steps, path);
     add_move(path);
     if (maze[snake_head->body.x][snake_head->body.y] == '#' && drills)
         drills--;

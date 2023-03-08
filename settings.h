@@ -10,11 +10,11 @@ typedef struct
 {
     int x;
     int y;
-} coordinates;
+} coordinates_t;
 
 typedef struct Node
 {
-    coordinates body;
+    coordinates_t body;
     struct Node *next;
 } list_t;
 

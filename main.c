@@ -90,7 +90,7 @@ void AI_random()
 
 void interactive()
 {
-    coordinates size;
+    coordinates_t size;
 
     size.x = 10;
     size.y = 20;
