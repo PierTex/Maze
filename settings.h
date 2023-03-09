@@ -50,55 +50,55 @@ void new_line();
 int score(size_t steps);
 
 // Libera le celle di memoria dall'allocazione iniziale (a partire dal nodo dato come parametro)
-void freeSnake(list_t *l);
+void free_snake(list_t *l);
 
 // Libera TUTTE le celle di memoria occupate dal maze scelto come parametro (x e' il numero di righe della matrice)
-void freeMaze(char **maze, int x);
+void free_maze(char **maze, int x);
 
 // Alloca lo spazio necessario per la generazione della testa dello Snake
-void create_snake_head();
+void create_head();
 
 // Crea il nodo (pezzo del corpo dello Snake) che andrà utilizzato nella funzione append
 list_t *create_body();
 
 // Accoda il nodo creato sopra nel caso ci si imbatta nella moneta
-void snakeAppend(list_t *new_body, int x, int y);
+void snake_append(list_t *new_body, int x, int y);
 
 // Opera su tutta la lista, muove la testa nella direzione desiderata e sovrascrive ogni nodo con la posizione del nodo precedente
-void snakeMovement(int x, int y);
+void snake_movement(int x, int y);
 
 // Riduce la dimensione dello Snake nel caso si imbatta su una penalità o su se stesso
-void snakeShrink();
+void snake_shrink();
 
 // Controlla se la posizione corrente della testa corrisponda alle coordinate di una parte del corpo, se sì allora verrà chiamata la funzione shrink altrimenti nulla
-void snakeEatingHimself();
+void snake_eating_himself();
 
-// Sovrascrive i caratteri del maze togliendo lo Snake (per poi stampare quello con le posizioni modificate tramite snakePrint)
-void snakeClear(char **maze);
+// Sovrascrive i caratteri del maze togliendo lo Snake (per poi stampare quello con le posizioni modificate tramite snake_print)
+void snake_clear(char **maze);
 
 // Stampa lo Snake con le posizioni modificate
-void snakePrint(char **maze);
+void snake_print(char **maze);
 
 // Crea il labirinto di dimensioni x e y con entrata, uscita e corridoi completamente random
-char **createMaze(int x, int y);
+char **create_maze(int x, int y);
 
 // Funzione che copia il contenuto di una matrice (maze_from) in un'altra (maze_to), utilizzata nella AI Random
 char **copy_matrix(int x, int y, char **maze_to, char **maze_from);
 
 // Stampa su schermo del labirinito
-void printMaze(char **maze, int x, int y);
+void print_maze(char **maze, int x, int y);
 
 // Funzione per immettere il labirinto scelto dall'utente
-char **inputFile(int M, int N);
+char **input_file(int M, int N);
 
 // La mossa presa in input è accettabile?
-bool checkDigitDirection(char direction);
+bool check_direction(char direction);
 
 // Inserimento della mossa e output dei raccoglibili presi fino a quel momento
-char insertMove();
+char insert_move();
 
 // Controlla che le coordinate della testa corrispondano a quelle dell'uscita
-bool checkFinish();
+bool check_finish();
 
 // Operazioni di conclusione partita
 void finish(char **maze, int x);

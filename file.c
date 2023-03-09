@@ -58,7 +58,7 @@ int score(size_t steps)
     return max + coins * 10 - steps;
 }
 
-void freeSnake(list_t *l)
+void free_snake(list_t *l)
 {
     list_t *tmp;
     while (l)
@@ -69,14 +69,14 @@ void freeSnake(list_t *l)
     }
 }
 
-void freeMaze(char **maze, int x)
+void free_maze(char **maze, int x)
 {
     for (int i = 0; i < x; ++i)
         free(maze[i]);
     free(maze);
 }
 
-void create_snake_head()
+void create_head()
 {
     snake_head = (list_t *)malloc(sizeof(list_t));
     if (!snake_head)
@@ -99,7 +99,7 @@ list_t *create_body()
     return new_body;
 }
 
-void snakeAppend(list_t *new_body, int x, int y)
+void snake_append(list_t *new_body, int x, int y)
 {
     head->next = new_body;
     new_body->body.x = x;
@@ -107,7 +107,7 @@ void snakeAppend(list_t *new_body, int x, int y)
     new_body->next = NULL;
 }
 
-void snakeMovement(int x, int y)
+void snake_movement(int x, int y)
 {
     coordinates_t last_pos, current_pos;
     last_pos.x = head->body.x;
@@ -128,7 +128,7 @@ void snakeMovement(int x, int y)
     backup.y = last_pos.y;
 }
 
-void snakeShrink()
+void snake_shrink()
 {
     int i = 0;
     list_t *ptrBackup;
@@ -138,12 +138,12 @@ void snakeShrink()
         head = head->next;
         i++;
     } while (i <= coins);
-    freeSnake(head);
+    free_snake(head);
     head = ptrBackup;
     head->next = NULL;
 }
 
-void snakeEatingHimself()
+void snake_eating_himself()
 {
     int i = 0;
     bool found = false;
@@ -163,10 +163,10 @@ void snakeEatingHimself()
     }
     head = snake_head;
     if (found)
-        snakeShrink();
+        snake_shrink();
 }
 
-void snakeClear(char **maze)
+void snake_clear(char **maze)
 {
     head = snake_head;
     while (head)
@@ -177,7 +177,7 @@ void snakeClear(char **maze)
     head = snake_head;
 }
 
-void snakePrint(char **maze)
+void snake_print(char **maze)
 {
     head = snake_head;
     maze[head->body.x][head->body.y] = '@';
@@ -190,7 +190,7 @@ void snakePrint(char **maze)
     head = snake_head;
 }
 
-char **createMaze(int x, int y)
+char **create_maze(int x, int y)
 {
     coins = 10;
     penalties = 5;
@@ -226,7 +226,7 @@ char **createMaze(int x, int y)
                 maze[row][col] = ' ';
                 if (col == entrance.y && row == entrance.x)
                 {
-                    create_snake_head();
+                    create_head();
                     head->body.x = entrance.x;
                     head->body.y = entrance.y;
 
@@ -342,13 +342,13 @@ char **copy_matrix(int x, int y, char **maze_to, char **maze_from)
         for (int j = 0; j < y; ++j)
             maze_to[i][j] = maze_from[i][j];
 
-    freeSnake(snake_head);
+    free_snake(snake_head);
     snake_head = NULL;
 
     return maze_to;
 }
 
-void printMaze(char **maze, int x, int y)
+void print_maze(char **maze, int x, int y)
 {
     char elem;
     for (int i = 0; i < x; i++)
@@ -373,7 +373,7 @@ void printMaze(char **maze, int x, int y)
     }
 }
 
-char **inputFile(int M, int N)
+char **input_file(int M, int N)
 {
     char *line;
     char **maze;
@@ -398,7 +398,7 @@ char **inputFile(int M, int N)
     return maze;
 }
 
-bool checkDigitDirection(char direction)
+bool check_direction(char direction)
 {
     if (tolower(direction) == 'n' ||
         tolower(direction) == 's' ||
@@ -408,7 +408,7 @@ bool checkDigitDirection(char direction)
     return false;
 }
 
-char insertMove()
+char insert_move()
 {
     char direction;
 
@@ -417,7 +417,7 @@ char insertMove()
     scanf("%c", &direction);
     fflush(stdin);
 
-    while (!checkDigitDirection(direction))
+    while (!check_direction(direction))
     {
         scanf("%c", &direction);
         fflush(stdin);
@@ -428,13 +428,13 @@ char insertMove()
 
 void finish(char **maze, int x)
 {
-    freeSnake(snake_head);
-    freeMaze(maze, x);
-    printf("\nHai vinto!!!\nPunteggio: " CYAN "%d\n" COLOR_RESET, score(steps));
+    free_snake(snake_head);
+    free_maze(maze, x);
+    printf("\nPartita terminata!\nPunteggio: " CYAN "%d\n" COLOR_RESET, score(steps));
     new_line();
 }
 
-bool checkFinish()
+bool check_finish()
 {
     if (head->body.x == ending.x && head->body.y == ending.y)
         return true;
@@ -445,7 +445,7 @@ void check_collectable(char **maze)
 {
     if (maze[snake_head->body.x][snake_head->body.y] == '$')
     {
-        snakeAppend(create_body(), backup.x, backup.y);
+        snake_append(create_body(), backup.x, backup.y);
         coins++;
     }
     else if (maze[snake_head->body.x][snake_head->body.y] == '!')
@@ -454,7 +454,7 @@ void check_collectable(char **maze)
         {
             head = snake_head;
             coins /= 2;
-            snakeShrink();
+            snake_shrink();
         }
         penalties++;
     }
@@ -463,7 +463,7 @@ void check_collectable(char **maze)
     else
     {
         if (coins > 1)
-            snakeEatingHimself();
+            snake_eating_himself();
     }
 }
 
@@ -471,35 +471,35 @@ void move(char direction, char **maze, int x, int y)
 {
     bool supreme_wall;
     head = snake_head;
-    snakeClear(maze);
+    snake_clear(maze);
     switch (tolower(direction))
     {
     case 'n':
         supreme_wall = snake_head->body.x - 1 < 0;
         if (!supreme_wall && (maze[snake_head->body.x - 1][snake_head->body.y] != '#' || drills))
-            snakeMovement(-1, 0);
+            snake_movement(-1, 0);
         break;
     case 's':
         supreme_wall = snake_head->body.x + 1 > x - 1;
         if (!supreme_wall && (maze[snake_head->body.x + 1][snake_head->body.y] != '#' || drills))
-            snakeMovement(+1, 0);
+            snake_movement(+1, 0);
         break;
     case 'e':
         supreme_wall = snake_head->body.y + 1 > y - 1;
         if (!supreme_wall && (maze[snake_head->body.x][snake_head->body.y + 1] != '#' || drills))
-            snakeMovement(0, +1);
+            snake_movement(0, +1);
         break;
     case 'o':
         supreme_wall = snake_head->body.y - 1 < 0;
         if (!supreme_wall && (maze[snake_head->body.x][snake_head->body.y - 1] != '#' || drills))
-            snakeMovement(0, -1);
+            snake_movement(0, -1);
         break;
     }
     if (maze[snake_head->body.x][snake_head->body.y] == '#' && drills)
         drills--;
     else
         check_collectable(maze);
-    snakePrint(maze);
+    snake_print(maze);
 }
 
 // Funzioni AI
@@ -553,8 +553,8 @@ void finish_AI(char **maze, int x, path_t *path)
     printf(COLOR_RESET);
     new_line();
     free_path(path);
-    freeSnake(snake_head);
-    freeMaze(maze, x);
+    free_snake(snake_head);
+    free_maze(maze, x);
 }
 
 void find_entrance_exit(char **maze, int x, int y)
@@ -563,7 +563,7 @@ void find_entrance_exit(char **maze, int x, int y)
     penalties = 0;
     drills = 0;
 
-    create_snake_head();
+    create_head();
 
     for (int row = 0; row < x; ++row)
         for (int col = 0; col < y; ++col)
@@ -601,23 +601,23 @@ void move_right_hand(char **maze, int x, int y, path_t *path)
             (maze[snake_head->body.x][snake_head->body.y + 1] != '#' || drills))
         {
             automove = 'E';
-            snakeMovement(0, +1);
+            snake_movement(0, +1);
         }
         else if (!(snake_head->body.x - 1 < 0) &&
                  (maze[snake_head->body.x - 1][snake_head->body.y] != '#' || drills))
         {
-            snakeMovement(-1, 0);
+            snake_movement(-1, 0);
         }
         else if (!(snake_head->body.y - 1 < 0) &&
                  (maze[snake_head->body.x][snake_head->body.y - 1] != '#' || drills))
         {
             automove = 'O';
-            snakeMovement(0, -1);
+            snake_movement(0, -1);
         }
         else
         {
             automove = 'S';
-            snakeMovement(+1, 0);
+            snake_movement(+1, 0);
         }
         break;
     case 'S':
@@ -625,23 +625,23 @@ void move_right_hand(char **maze, int x, int y, path_t *path)
             (maze[snake_head->body.x][snake_head->body.y - 1] != '#' || drills))
         {
             automove = 'O';
-            snakeMovement(0, -1);
+            snake_movement(0, -1);
         }
         else if (!(snake_head->body.x + 1 > x - 1) &&
                  (maze[snake_head->body.x + 1][snake_head->body.y] != '#' || drills))
         {
-            snakeMovement(+1, 0);
+            snake_movement(+1, 0);
         }
         else if (!(snake_head->body.y + 1 > y - 1) &&
                  (maze[snake_head->body.x][snake_head->body.y + 1] != '#' || drills))
         {
             automove = 'E';
-            snakeMovement(0, +1);
+            snake_movement(0, +1);
         }
         else
         {
             automove = 'N';
-            snakeMovement(-1, 0);
+            snake_movement(-1, 0);
         }
         break;
     case 'E':
@@ -649,23 +649,23 @@ void move_right_hand(char **maze, int x, int y, path_t *path)
             (maze[snake_head->body.x + 1][snake_head->body.y] != '#' || drills))
         {
             automove = 'S';
-            snakeMovement(+1, 0);
+            snake_movement(+1, 0);
         }
         else if (!(snake_head->body.y + 1 > y - 1) &&
                  (maze[snake_head->body.x][snake_head->body.y + 1] != '#' || drills))
         {
-            snakeMovement(0, +1);
+            snake_movement(0, +1);
         }
         else if (!(snake_head->body.x - 1 < 0) &&
                  (maze[snake_head->body.x - 1][snake_head->body.y] != '#' || drills))
         {
             automove = 'N';
-            snakeMovement(-1, 0);
+            snake_movement(-1, 0);
         }
         else
         {
             automove = 'O';
-            snakeMovement(0, -1);
+            snake_movement(0, -1);
         }
         break;
     case 'O':
@@ -673,23 +673,23 @@ void move_right_hand(char **maze, int x, int y, path_t *path)
             (maze[snake_head->body.x - 1][snake_head->body.y] != '#' || drills))
         {
             automove = 'N';
-            snakeMovement(-1, 0);
+            snake_movement(-1, 0);
         }
         else if (!(snake_head->body.y - 1 < 0) &&
                  (maze[snake_head->body.x][snake_head->body.y - 1] != '#' || drills))
         {
-            snakeMovement(0, -1);
+            snake_movement(0, -1);
         }
         else if (!(snake_head->body.x + 1 > x - 1) &&
                  (maze[snake_head->body.x + 1][snake_head->body.y] != '#' || drills))
         {
             automove = 'S';
-            snakeMovement(+1, 0);
+            snake_movement(+1, 0);
         }
         else
         {
             automove = 'E';
-            snakeMovement(0, +1);
+            snake_movement(0, +1);
         }
         break;
     }
@@ -720,7 +720,7 @@ void check_near_cells_N(char **maze, int y, int *odds, neighbors_t cells)
         if (cells.cell_1 && cells.cell_2 && cells.cell_3)
         {
             automove = 'S';
-            snakeMovement(0, +1);
+            snake_movement(0, +1);
         }
         else
             switch (*odds)
@@ -735,7 +735,7 @@ void check_near_cells_N(char **maze, int y, int *odds, neighbors_t cells)
                 else
                 {
                     automove = 'O';
-                    snakeMovement(0, -1);
+                    snake_movement(0, -1);
                 }
                 break;
             case 2:
@@ -748,7 +748,7 @@ void check_near_cells_N(char **maze, int y, int *odds, neighbors_t cells)
                 else
                 {
                     automove = 'N';
-                    snakeMovement(-1, 0);
+                    snake_movement(-1, 0);
                 }
                 break;
             case 3:
@@ -761,7 +761,7 @@ void check_near_cells_N(char **maze, int y, int *odds, neighbors_t cells)
                 else
                 {
                     automove = 'E';
-                    snakeMovement(0, +1);
+                    snake_movement(0, +1);
                 }
                 break;
             }
@@ -778,7 +778,7 @@ void check_near_cells_S(char **maze, int x, int y, int *odds, neighbors_t cells)
         if (cells.cell_1 && cells.cell_2 && cells.cell_3)
         {
             automove = 'N';
-            snakeMovement(-1, 0);
+            snake_movement(-1, 0);
         }
         else
             switch (*odds)
@@ -793,7 +793,7 @@ void check_near_cells_S(char **maze, int x, int y, int *odds, neighbors_t cells)
                 else
                 {
                     automove = 'E';
-                    snakeMovement(0, +1);
+                    snake_movement(0, +1);
                 }
                 break;
             case 2:
@@ -806,7 +806,7 @@ void check_near_cells_S(char **maze, int x, int y, int *odds, neighbors_t cells)
                 else
                 {
                     automove = 'S';
-                    snakeMovement(+1, 0);
+                    snake_movement(+1, 0);
                 }
                 break;
             case 3:
@@ -819,7 +819,7 @@ void check_near_cells_S(char **maze, int x, int y, int *odds, neighbors_t cells)
                 else
                 {
                     automove = 'O';
-                    snakeMovement(0, -1);
+                    snake_movement(0, -1);
                 }
                 break;
             }
@@ -836,7 +836,7 @@ void check_near_cells_E(char **maze, int x, int y, int *odds, neighbors_t cells)
         if (cells.cell_1 && cells.cell_2 && cells.cell_3)
         {
             automove = 'O';
-            snakeMovement(0, -1);
+            snake_movement(0, -1);
         }
         else
             switch (*odds)
@@ -851,7 +851,7 @@ void check_near_cells_E(char **maze, int x, int y, int *odds, neighbors_t cells)
                 else
                 {
                     automove = 'N';
-                    snakeMovement(-1, 0);
+                    snake_movement(-1, 0);
                 }
                 break;
             case 2:
@@ -864,7 +864,7 @@ void check_near_cells_E(char **maze, int x, int y, int *odds, neighbors_t cells)
                 else
                 {
                     automove = 'E';
-                    snakeMovement(0, +1);
+                    snake_movement(0, +1);
                 }
                 break;
             case 3:
@@ -877,7 +877,7 @@ void check_near_cells_E(char **maze, int x, int y, int *odds, neighbors_t cells)
                 else
                 {
                     automove = 'S';
-                    snakeMovement(+1, 0);
+                    snake_movement(+1, 0);
                 }
                 break;
             }
@@ -894,7 +894,7 @@ void check_near_cells_O(char **maze, int x, int *odds, neighbors_t cells)
         if (cells.cell_1 && cells.cell_2 && cells.cell_3)
         {
             automove = 'E';
-            snakeMovement(0, +1);
+            snake_movement(0, +1);
         }
         else
             switch (*odds)
@@ -909,7 +909,7 @@ void check_near_cells_O(char **maze, int x, int *odds, neighbors_t cells)
                 else
                 {
                     automove = 'S';
-                    snakeMovement(+1, 0);
+                    snake_movement(+1, 0);
                 }
                 break;
             case 2:
@@ -922,7 +922,7 @@ void check_near_cells_O(char **maze, int x, int *odds, neighbors_t cells)
                 else
                 {
                     automove = 'O';
-                    snakeMovement(0, -1);
+                    snake_movement(0, -1);
                 }
                 break;
             case 3:
@@ -935,7 +935,7 @@ void check_near_cells_O(char **maze, int x, int *odds, neighbors_t cells)
                 else
                 {
                     automove = 'N';
-                    snakeMovement(-1, 0);
+                    snake_movement(-1, 0);
                 }
                 break;
             }
@@ -944,13 +944,16 @@ void check_near_cells_O(char **maze, int x, int *odds, neighbors_t cells)
 
 void move_random(char **maze, int x, int y, path_t *path)
 {
+    if (check_finish())
+        return;
+
     int odds;
     neighbors_t cells;
     cells.cell_1 = false;
     cells.cell_2 = false;
     cells.cell_3 = false;
     odds = rand() % 3 + 1;
-    snakeClear(maze);
+    snake_clear(maze);
     switch (toupper(automove))
     {
     case 'N':
@@ -971,7 +974,8 @@ void move_random(char **maze, int x, int y, path_t *path)
         drills--;
     else
         check_collectable(maze);
-    snakePrint(maze);
+    snake_print(maze);
+    move_random(maze, x, y, path);
 }
 
 void mark_path(path_t *path, char **maze)
