@@ -14,6 +14,7 @@
 #define GREY_GAINSBORO "\x1B[38;2;220;220;220m"
 #define YELLOW "\x1B[38;2;255;255;0m"
 #define BROWN_BURLYWOOD "\x1B[38;2;222;184;135m"
+#define CYAN "\x1B[38;2;0;255;255m"
 #define COLOR_RESET "\x1B[0m"
 
 coordinates_t entrance, ending, backup;
@@ -411,7 +412,7 @@ char insertMove()
 {
     char direction;
 
-    printf("\nMonete:\t\t%d\nPenalita':\t%d\nTrapani:\t%d\n\n", coins, penalties, drills);
+    printf("\nMonete:\t\t" CYAN "%d" COLOR_RESET "\nPenalita':\t" CYAN "%d" COLOR_RESET "\nTrapani:\t" CYAN "%d\n\n" COLOR_RESET, coins, penalties, drills);
     printf("Inserisci mossa: ");
     scanf("%c", &direction);
     fflush(stdin);
@@ -429,7 +430,7 @@ void finish(char **maze, int x)
 {
     freeSnake(snake_head);
     freeMaze(maze, x);
-    printf("\nHai vinto!!!\nPunteggio: %d\n", score(steps));
+    printf("\nHai vinto!!!\nPunteggio: " CYAN "%d\n" COLOR_RESET, score(steps));
     new_line();
 }
 
@@ -545,9 +546,11 @@ void print_path(path_t *path)
 
 void finish_AI(char **maze, int x, path_t *path)
 {
-    printf("\nPunteggio: %d\nPercorso effettuato: ", score(path->size));
+    printf("\nPunteggio: " CYAN "%d" COLOR_RESET "\nPercorso effettuato: ", score(path->size));
     path->moves[path->size] = '\0';
+    printf(CYAN);
     print_path(path);
+    printf(COLOR_RESET);
     new_line();
     free_path(path);
     freeSnake(snake_head);
