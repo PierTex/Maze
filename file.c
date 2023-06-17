@@ -17,7 +17,6 @@
 #define YELLOW "\x1B[38;2;255;255;0m"
 #define BROWN_BURLYWOOD "\x1B[38;2;222;184;135m"
 #define CYAN "\x1B[38;2;0;255;255m"
-//#define WHITE_BKG "\x1B[48;2;225;225;225m"
 #define COLOR_RESET "\x1B[0m"
 
 coordinates_t entrance, ending, backup;
@@ -129,6 +128,7 @@ void snakeMovement(int x, int y)
     }
     backup.x = last_pos.x;
     backup.y = last_pos.y;
+    steps++;
 }
 
 void snakeShrink()
