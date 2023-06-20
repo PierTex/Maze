@@ -7,9 +7,9 @@
 #include <time.h>
 
 /**
- * This struct create a cell containing two int variable that would be use as the 
+ * This struct create a cell containing two int variable that would be use as the
  * coordinates for our snake
-*/
+ */
 typedef struct
 {
     int x;
@@ -17,9 +17,9 @@ typedef struct
 } coordinates_t;
 
 /**
- * This struct create a node containing a variable of type struct coordinates and 
+ * This struct create a node containing a variable of type struct coordinates and
  * a pointer to a node. This node will be used as the body of our snake
-*/ 
+ */
 typedef struct Node
 {
     coordinates_t body;
@@ -27,10 +27,10 @@ typedef struct Node
 } list_t;
 
 /**
- * This struct create a cell containg a pointer to a char variable and two size_t 
+ * This struct create a cell containg a pointer to a char variable and two size_t
  * variable, one that indicate the capacity of the path of the snake and one that
  * indicate its length
-*/
+ */
 typedef struct
 {
     char *moves;
@@ -41,7 +41,7 @@ typedef struct
 /**
  * This struct create a cell containing two int variables that stands for the actual
  * score of the game and the best score of the game
-*/
+ */
 typedef struct
 {
     int current;
@@ -49,15 +49,31 @@ typedef struct
 } score_t;
 
 /**
- * This struct create a cell containing three boolean variables that stands for the 
+ * This struct create a cell containing three boolean variables that stands for the
  * three direction that the IA mode will check before doing the move
-*/
+ */
 typedef struct
 {
     bool cell_1;
     bool cell_2;
     bool cell_3;
 } neighbors_t;
+
+typedef struct
+{
+    list_t *head;
+    list_t *snake_head;
+    coordinates_t entrance;
+    coordinates_t ending;
+    coordinates_t backup;
+    coordinates_t maze_size;
+    char automove;
+    unsigned steps;
+    int coins;
+    int penalties;
+    int drills;
+    int final_score;
+} game_t;
 
 /**
  * This function is used to refresh the screen terminal after each movement
@@ -73,7 +89,7 @@ void new_line();
  * This fuction is used to calculate the final score of the game
  * @param steps Indicates the number of steps that the snake has done in the entire game
  */
-int score(size_t steps);
+int score(game_t *game);
 
 /**
  * This function is used to free the memory used for the allocation of the snake
@@ -91,7 +107,7 @@ void freeMaze(char **maze, int x);
 /**
  * This function is used to allocate the head of the snake at the beginning of the game
  */
-void create_snake_head();
+void create_snake_head(game_t *game);
 
 /**
  * This function create a node that rapresents the body of the snake and this will be add to the snake using the snakeAppend function
@@ -104,47 +120,47 @@ list_t *create_body();
  * @param x Indicates the value of the x coordinate of the node
  * @param y Indicate the value of the y coordinate of the node
  */
-void snakeAppend(list_t *new_body, int x, int y);
+void snakeAppend(list_t *new_body, int x, int y, game_t *game);
 
 /**
  * This fuction is used to perform the movement of the snake, moving its head and all its body
  * @param x Indicates the x coordinate of the new position for the head
  * @param y Indicate the y coordinate of the new position for the head
  */
-void snakeMovement(int x, int y);
+void snakeMovement(int x, int y, game_t *game);
 
 /**
  * This function is used to reduce the size of the snake body in the case of receiving a penalty or in case of hitting the body with the head
  */
-void snakeShrink();
+void snakeShrink(game_t *game);
 
 /**
  * This function is used to check if the coordinates of the head are equal to the coordinate of some node of the body. In this case the function
  * will call the snakeShrink function
  */
-void snakeEatingHimself();
+void snakeEatingHimself(game_t *game);
 
 /**
  * This function is used to clear the snake from the maze in order to re-add it using the snakePrint function
  * @param **maze Indicates the maze to clear
  */
-void snakeClear(char **maze);
+void snakeClear(char **maze, game_t *game);
 
 /**
  * This function is used to print the updated snake in the cleared maze
  * @param **maze Indicates the maze on which the snake will be printed
  */
-void snakePrint(char **maze);
+void snakePrint(char **maze, game_t *game);
 
 /**
  * This function is used to create a maze with random walls, dollars, drills, penalties, entry and exit
  * @param x Indicates the x size of the maze
  * @param y Indiates the y size of the maze
  */
-char **createMaze(int x, int y);
+char **createMaze(int x, int y, game_t *game);
 
 // Funzione che copia il contenuto di una matrice (maze_from) in un'altra (maze_to), utilizzata nella AI Random
-char **copy_matrix(int x, int y, char **maze_to, char **maze_from);
+void copy_matrix(int x, int y, char **maze_to, char **maze_from, game_t *game);
 
 /**
  * This function is used to print the maze
@@ -170,25 +186,25 @@ bool checkDigitDirection(char direction);
 /**
  * This function is used to print the value of drills, dollars and penalties taken and to take a move from input
  */
-char insertMove();
+char insertMove(game_t *game);
 
 /**
  * This function is used to check if the coordinates of the snake head are equal to the coordinates of the exit
  */
-bool checkFinish();
+bool checkFinish(game_t *game);
 
 /**
  * This function is used to print the string YOU WON when the head reaches the exit of the maze
  * @param **maze Indicates the maze to check
  * @param x Indicates the x size of the maze
  */
-void finish(char **maze, int x);
+void finish(char **maze, int x, game_t *game);
 
 /**
  * This function is used to check if the head is under a collecatable object
  * @param **maze Indicates the maze to check
  */
-void check_collectable(char **maze);
+void check_collectable(char **maze, game_t *game);
 
 /**
  * This function in used to check if the move in an illegal movemenent or not
@@ -197,7 +213,7 @@ void check_collectable(char **maze);
  * @param x Indicates the x size of the maze
  * @param y Indicates the y size of the maze
  */
-void move(char direction, char **maze, int x, int y);
+void move(char direction, char **maze, int x, int y, game_t *game);
 
 /**
  * Specific functions for the AI mode
@@ -213,13 +229,13 @@ void free_path(path_t *path);
  * This function is used to initzialise the *path variable and to set the values of coins, penalties and drills to zero
  * @param *path Indicates the path to initzialise
  */
-void init_path(path_t *path);
+void init_path(path_t *path, game_t *game);
 
 /**
  * This function is used to add a move to the path and to expand the capacity if necessary
  * @param *path Indicates the path to expand
  */
-void add_move(path_t *path);
+void add_move(path_t *path, game_t *game);
 
 /**
  * This function is used to print the path int the form NESONESO...
@@ -233,7 +249,7 @@ void print_path(path_t *path);
  * @param x Indicates the x size of the maze
  * @param *path Indicates the path to print and to free
  */
-void finish_AI(char **maze, int x, path_t *path);
+void finish_AI(char **maze, int x, path_t *path, game_t *game);
 
 /**
  * This fuction is used to find the coordinates of the entrancce and the exit of the maze that has been passed from input
@@ -241,7 +257,7 @@ void finish_AI(char **maze, int x, path_t *path);
  * @param x Indicates the x size of the maze
  * @param y Indicates the y size of the maze
  */
-void find_entrance_exit(char **maze, int x, int y);
+void find_entrance_exit(char **maze, int x, int y, game_t *game);
 
 /**
  * This function is used to check the first possible move following the concept of the Always Right mode
@@ -250,7 +266,7 @@ void find_entrance_exit(char **maze, int x, int y);
  * @param y Indicates the y size of the maze
  * @param *path Indicates the path to expand with the move
  */
-void move_right_hand(char **maze, int x, int y, path_t *path);
+void move_right_hand(char **maze, int x, int y, path_t *path, game_t *game);
 
 /**
  * This function is used to check the cell near the head to perform the AI Random mode
@@ -259,7 +275,7 @@ void move_right_hand(char **maze, int x, int y, path_t *path);
  * @param y Indicates the y size of the maze
  * @param cells Indicates the three cell to check
  */
-void check_near_cells_N(char **maze, int y, int *cell, neighbors_t cells);
+void check_near_cells_N(char **maze, int y, int *cell, neighbors_t cells, game_t *game);
 
 /**
  * This function is used to check the cell near the head to perform the AI Random mode
@@ -268,7 +284,7 @@ void check_near_cells_N(char **maze, int y, int *cell, neighbors_t cells);
  * @param y Indicates the y size of the maze
  * @param cells Indicates the three cell to check
  */
-void check_near_cells_S(char **maze, int x, int y, int *cell, neighbors_t cells);
+void check_near_cells_S(char **maze, int x, int y, int *cell, neighbors_t cells, game_t *game);
 
 /**
  * This function is used to check the cell near the head to perform the AI Random mode
@@ -277,7 +293,7 @@ void check_near_cells_S(char **maze, int x, int y, int *cell, neighbors_t cells)
  * @param y Indicates the y size of the maze
  * @param cells Indicates the three cell to check
  */
-void check_near_cells_E(char **maze, int x, int y, int *cell, neighbors_t cells);
+void check_near_cells_E(char **maze, int x, int y, int *cell, neighbors_t cells, game_t *game);
 
 /**
  * This function is used to check the cell near the head to perform the AI Random mode
@@ -286,7 +302,7 @@ void check_near_cells_E(char **maze, int x, int y, int *cell, neighbors_t cells)
  * @param y Indicates the y size of the maze
  * @param cells Indicates the three cell to check
  */
-void check_near_cells_O(char **maze, int y, int *cell, neighbors_t cells);
+void check_near_cells_O(char **maze, int y, int *cell, neighbors_t cells, game_t *game);
 
 /**
  * This function is used to move the snake in the AI Random mode
@@ -295,13 +311,13 @@ void check_near_cells_O(char **maze, int y, int *cell, neighbors_t cells);
  * @param y Indicates the y size of the maze
  * @param *path Indicates the path to expand
  */
-void move_random(char **maze, int x, int y, path_t *path);
+void move_random(char **maze, int x, int y, path_t *path, game_t *game);
 
 /**
  * This function is used to mark the path done by the snake during the AI Random or the AI Always Right
  * @param *path Indicates the path to mark with dots
  * @param **maze Indicates the maze on which mark the path
  */
-void mark_path(path_t *path, char **maze);
+void mark_path(path_t *path, char **maze, game_t *game);
 
 #endif

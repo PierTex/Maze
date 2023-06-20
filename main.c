@@ -11,6 +11,7 @@ void AI_right_hand()
 {
     int M, N;
     path_t path;
+    game_t game;
 
     printf("Inserire in ordine i dati della matrice (input separati da una newline):\n");
     printf("- Numero di colonne\n");
@@ -19,26 +20,30 @@ void AI_right_hand()
     scanf(" %d", &M);
     scanf(" %d", &N);
 
-    init_path(&path);
+    game.maze_size.x = N;
+    game.maze_size.y = M;
+
+    init_path(&path, &game);
     char **maze = inputFile(M, N);
     refresh();
 
-    find_entrance_exit(maze, N, M);
-    while (!checkFinish())
-        move_right_hand(maze, N, M, &path);
+    find_entrance_exit(maze, N, M, &game);
+    while (!checkFinish(&game))
+        move_right_hand(maze, N, M, &path, &game);
     printf("\n");
-    mark_path(&path, maze);
+    mark_path(&path, maze, &game);
     printMaze(maze, N, M);
-    finish_AI(maze, N, &path);
+    game.final_score = score(&game);
+    finish_AI(maze, N, &path, &game);
 }
 
 void AI_random()
 {
     int M, N;
-    int best_score;
+    int best_score = 0;
     size_t n_iterations = 10000;
     path_t path, best_path;
-    score_t ratio;
+    game_t game;
 
     printf("Inserire in ordine i dati della matrice (input separati da una newline):\n");
     printf("- Numero di colonne\n");
@@ -47,28 +52,33 @@ void AI_random()
     scanf(" %d", &M);
     scanf(" %d", &N);
 
-    init_path(&best_path);
+    game.maze_size.x = N;
+    game.maze_size.y = M;
+
+    init_path(&best_path, &game);
     char **maze = inputFile(M, N);
     refresh();
 
     char **maze_copy = malloc(N * sizeof(char *));
     for (int i = 0; i < N; ++i)
-        maze_copy[i] = malloc(M * sizeof(char *));
-    maze_copy = copy_matrix(N, M, maze_copy, maze);
+        maze_copy[i] = malloc(M * sizeof(char));
+
+    game.snake_head = NULL;
+    game.head = NULL;
+    copy_matrix(N, M, maze_copy, maze, &game);
 
     for (size_t i = 0; i < n_iterations; ++i)
     {
-        find_entrance_exit(maze, N, M);
-        init_path(&path);
-        while (!checkFinish())
-            move_random(maze, N, M, &path);
-        if (score(path.size) >= 0)
+        find_entrance_exit(maze, N, M, &game);
+        init_path(&path, &game);
+        while (!checkFinish(&game))
+            move_random(maze, N, M, &path, &game);
+        if (score(&game) >= 0)
         {
-            ratio.current = score(path.size) / path.size;
-            if (i == 0 || (score(path.size) >= best_score && ratio.current > ratio.best))
+            if (i == 0 || (score(&game) >= best_score && path.size < best_path.size))
             {
-                best_score = score(path.size);
-                ratio.best = best_score / path.size;
+                best_score = score(&game);
+
                 best_path.size = path.size;
                 char *new_ptr = (char *)realloc(best_path.moves, best_path.size * sizeof(char) + 1);
                 if (!new_ptr)
@@ -80,35 +90,38 @@ void AI_random()
                 memcpy(best_path.moves, path.moves, path.size * sizeof(char));
             }
         }
-        maze = copy_matrix(N, M, maze, maze_copy);
+        copy_matrix(N, M, maze, maze_copy, &game);
         free_path(&path);
     }
+    game.final_score = best_score;
     printf("\n");
-    mark_path(&best_path, maze);
+    mark_path(&best_path, maze, &game);
     printMaze(maze, N, M);
     freeMaze(maze_copy, N);
-    finish_AI(maze, N, &best_path);
+    finish_AI(maze, N, &best_path, &game);
 }
 
 void interactive()
 {
     coordinates_t size;
+    game_t game;
 
-    size.x = 10;
-    size.y = 20;
+    game.maze_size.x = 10;
+    game.maze_size.y = 20;
+    game.steps = 0;
 
-    char **maze = createMaze(size.x, size.y);
+    char **maze = createMaze(game.maze_size.x, game.maze_size.y, &game);
 
-    while (!checkFinish())
+    while (!checkFinish(&game))
     {
         refresh();
-        printMaze(maze, size.x, size.y);
-        char movement = insertMove();
-        move(movement, maze, size.x, size.y);
+        printMaze(maze, game.maze_size.x, game.maze_size.y);
+        char movement = insertMove(&game);
+        move(movement, maze, game.maze_size.x, game.maze_size.y, &game);
     }
     refresh();
-    printMaze(maze, size.x, size.y);
-    finish(maze, size.x);
+    printMaze(maze, game.maze_size.x, game.maze_size.y);
+    finish(maze, game.maze_size.x, &game);
 }
 
 int main()
@@ -158,7 +171,7 @@ o    #          $ #
 #    #     #      _
 #    #     #      #
 #          #      #
-#    $$$$  #      #
+#    $$$  T#      #
 ###################
 
 */
