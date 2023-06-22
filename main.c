@@ -40,7 +40,7 @@ void AI_right_hand()
 void AI_random()
 {
     int M, N;
-    int best_score = 0;
+    int best_score = -1;
     size_t n_iterations = 10000;
     path_t path, best_path;
     game_t game;
@@ -75,10 +75,9 @@ void AI_random()
             move_random(maze, N, M, &path, &game);
         if (score(&game) >= 0)
         {
-            if (i == 0 || (score(&game) >= best_score && path.size < best_path.size))
+            if (i == 0 || score(&game) >= best_score)
             {
                 best_score = score(&game);
-
                 best_path.size = path.size;
                 char *new_ptr = (char *)realloc(best_path.moves, best_path.size * sizeof(char) + 1);
                 if (!new_ptr)
