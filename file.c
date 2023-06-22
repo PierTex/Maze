@@ -80,7 +80,7 @@ char **createMaze(int x, int y, game_t *game)
     for (int i = 0; i < x; i++)
         maze[i] = malloc(y * sizeof(char *));
 
-    int nWalls, pHole, ctrCol;
+    int nWalls, pHole;
     int lenCorridor = ((rand() % 3) + 2); // larghezza corridoio (2 o 3 spazi)
 
     // creazione entrata e uscita
@@ -144,7 +144,6 @@ char **createMaze(int x, int y, game_t *game)
         if (maze[1][col] == '#')
         { // siamo in una colonna?
             atLeast1 = false;
-            ctrCol = 0;
             do
             {
                 for (int row = 1; row < x - 2; row++)
@@ -160,15 +159,7 @@ char **createMaze(int x, int y, game_t *game)
                             atLeast1 = true;
                         }
                 }
-                ctrCol++;
             } while (!atLeast1);
-            if (ctrCol > 2 && !atLeast1)
-            { // se non genera un buco in 3 cicli allora lo genera obbligatoriamente in una posizione random
-                k = rand() % (x - 3) + 1;
-                maze[k][col] = ' ';
-                maze[k + 1][col] = ' ';
-                atLeast1 = true;
-            }
         }
     }
 
